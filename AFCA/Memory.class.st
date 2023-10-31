@@ -1,3 +1,22 @@
+"
+Public API and Key Messages
+
+- message one
+- message two
+- (for bonus points) how to create instances.
+
+   One simple example is simply gorgeous.
+
+Internal Representation and Key Implementation Points.
+
+    Instance Variables
+	cells:		<Object>
+	mar:		<Object>
+	mbr:		<Object>
+
+
+    Implementation Points
+"
 Class {
 	#name : #Memory,
 	#superclass : #Object,

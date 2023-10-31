@@ -1,3 +1,26 @@
+"
+Public API and Key Messages
+
+- message one
+- message two
+- (for bonus points) how to create instances.
+
+   One simple example is simply gorgeous.
+
+Internal Representation and Key Implementation Points.
+
+    Instance Variables
+	alu:		<Object>
+	controlU:		<Object>
+	flags:		<Object>
+	mar:		<Object>
+	mbr:		<Object>
+	memory:		<Object>
+	temporary:		<Object>
+
+
+    Implementation Points
+"
 Class {
 	#name : #DataBus,
 	#superclass : #Object,

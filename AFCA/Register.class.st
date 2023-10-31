@@ -1,3 +1,22 @@
+"
+Public API and Key Messages
+
+- message one
+- message two
+- (for bonus points) how to create instances.
+
+   One simple example is simply gorgeous.
+
+Internal Representation and Key Implementation Points.
+
+    Instance Variables
+	complete:		<Object>
+	high:		<Object>
+	low:		<Object>
+
+
+    Implementation Points
+"
 Class {
 	#name : #Register,
 	#superclass : #Object,

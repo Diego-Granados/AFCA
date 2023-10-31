@@ -1,3 +1,68 @@
+"
+Public API and Key Messages
+
+- message one
+- message two
+- (for bonus points) how to create instances.
+
+   One simple example is simply gorgeous.
+
+Internal Representation and Key Implementation Points.
+
+    Instance Variables
+	alugui:		<Object>
+	alutext:		<Object>
+	aluvalue:		<Object>
+	ax:		<Object>
+	b1gui:		<Object>
+	b1text:		<Object>
+	b1value:		<Object>
+	b2gui:		<Object>
+	b2text:		<Object>
+	b2value:		<Object>
+	b3gui:		<Object>
+	b3text:		<Object>
+	b3value:		<Object>
+	b4gui:		<Object>
+	b4text:		<Object>
+	b4value:		<Object>
+	busDatos:		<Object>
+	busgui:		<Object>
+	bustext:		<Object>
+	busvalue:		<Object>
+	bx:		<Object>
+	cugui:		<Object>
+	cutext:		<Object>
+	cuvalue:		<Object>
+	cx:		<Object>
+	dx:		<Object>
+	flagsgui:		<Object>
+	flagstext:		<Object>
+	flagsvalue:		<Object>
+	instructionRegister:		<Object>
+	irgui:		<Object>
+	irtext:		<Object>
+	irvalue:		<Object>
+	margui:		<Object>
+	martext:		<Object>
+	marvalue:		<Object>
+	mbrgui:		<Object>
+	mbrtext:		<Object>
+	mbrvalue:		<Object>
+	memorygui:		<Object>
+	memorytext:		<Object>
+	memoryvalue:		<Object>
+	pcgui:		<Object>
+	pctext:		<Object>
+	pcvalue:		<Object>
+	programCounter:		<Object>
+	registrosgui:		<Object>
+	registrostext:		<Object>
+	registrosvalue:		<Object>
+
+
+    Implementation Points
+"
 Class {
 	#name : #ControlUnit,
 	#superclass : #Object,
