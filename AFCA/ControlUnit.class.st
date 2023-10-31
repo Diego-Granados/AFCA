@@ -115,7 +115,31 @@ Class {
 		'b4value',
 		'mbrvalue',
 		'marvalue',
-		'memoryvalue'
+		'memoryvalue',
+		'axgui',
+		'bxgui',
+		'cxgui',
+		'dxgui',
+		'axtext',
+		'bxtext',
+		'cxtext',
+		'dxtext',
+		'axvalue',
+		'bxvalue',
+		'cxvalue',
+		'dxvalue',
+		'carrygui',
+		'signgui',
+		'zerogui',
+		'interruptgui',
+		'carrytext',
+		'signtext',
+		'zerotext',
+		'interrupttext',
+		'carryvalue',
+		'signvalue',
+		'zerovalue',
+		'interruptvalue'
 	],
 	#category : #AFCA
 }
@@ -205,6 +229,22 @@ ControlUnit >> creategui [
 	mbrgui := Morph new color: lightblue.
 	margui := Morph new color: lightblue.
 	memorygui:= Morph new color: lightblue.
+	axgui := Morph new color: lightblue.
+	bxgui := Morph new color: lightblue.
+	cxgui := Morph new color: lightblue.
+	dxgui := Morph new color: lightblue.
+	carrygui := Morph new color: lightblue.
+	signgui := Morph new color: lightblue.
+	zerogui := Morph new color: lightblue.
+	interruptgui := Morph new color: lightblue.
+	carrytext := TextMorph new contents: 'Carry' .
+	signtext := TextMorph new contents: 'Sign' .
+	zerotext := TextMorph new contents: 'Zero' .
+	interrupttext := TextMorph new contents: 'Interrupt' .
+	carryvalue := TextMorph new contents: ''.
+	signvalue := TextMorph new contents: ''.
+	zerovalue := TextMorph new contents: ''.
+	interruptvalue := TextMorph new contents: ''.
 	cutext := TextMorph new contents: 'Control Unit' .
 	irtext := TextMorph new contents: 'Instruction Register' .
 	pctext := TextMorph new contents: 'Program Counter' .
@@ -219,6 +259,11 @@ ControlUnit >> creategui [
 	mbrtext := TextMorph new contents: 'MBR'.
 	martext := TextMorph new contents: 'MAR'.
 	memorytext := TextMorph new contents: 'Memory'.
+	axtext := TextMorph new contents: 'Ax'.
+	bxtext := TextMorph new contents: 'Bx'.
+	cxtext := TextMorph new contents: 'Cx'.
+	dxtext := TextMorph new contents: 'Dx'.
+	
 	cuvalue := TextMorph new contents: ''.
 	irvalue := TextMorph new contents: '' .
 	pcvalue := TextMorph new contents: '' .
@@ -234,6 +279,11 @@ ControlUnit >> creategui [
 	marvalue := TextMorph new contents: ''.
 	memoryvalue:= TextMorph new contents: ''.
 	
+	axvalue := TextMorph new contents: ''.
+	bxvalue := TextMorph new contents: ''.
+	cxvalue := TextMorph new contents: ''.
+	dxvalue := TextMorph new contents: ''.
+	
 	cugui addMorph: cutext .
 	irgui addMorph: irtext .
 	pcgui addMorph: pctext .
@@ -248,7 +298,10 @@ ControlUnit >> creategui [
 	mbrgui addMorph: mbrtext .
 	margui addMorph: martext .
 	memorygui addMorph: memorytext .
-	
+	axgui addMorph: axtext .	
+	bxgui addMorph: bxtext .
+	cxgui addMorph: cxtext .	
+	dxgui addMorph: dxtext .	
 	cugui addMorph: cuvalue .
 	irgui addMorph: irvalue .
 	pcgui addMorph: pcvalue .
@@ -263,13 +316,33 @@ ControlUnit >> creategui [
 	mbrgui addMorph: mbrvalue .
 	margui addMorph: marvalue .
 	memorygui addMorph: memoryvalue .
-	
+	axgui addMorph: axvalue .	
+	bxgui addMorph: bxvalue .
+	cxgui addMorph: cxvalue .	
+	dxgui addMorph: dxvalue .	
+	carrygui addMorph: carrytext.
+	carrygui addMorph: carryvalue.
+	signgui addMorph: signtext.
+	signgui addMorph: signvalue.
+	zerogui addMorph: zerotext.
+	zerogui addMorph: zerovalue.
+	interruptgui addMorph: interrupttext.
+	interruptgui addMorph: interruptvalue.
+
 	cugui openInWorld .
 	irgui openInWorld .
 	pcgui openInWorld .
 	busgui openInWorld .
 	registrosgui openInWorld .
+	axgui openInWorld .
+	bxgui openInWorld .
+	cxgui openInWorld .
+	dxgui openInWorld .
 	flagsgui openInWorld .
+	carrygui openInWorld .
+	signgui openInWorld .
+	zerogui openInWorld .
+	interruptgui openInWorld .
 	alugui openInWorld .
 	b1gui openInWorld .
 	b2gui openInWorld .
@@ -283,27 +356,65 @@ ControlUnit >> creategui [
 	pcgui position: (pcgui position + (40@260)).
 	busgui position: (busgui position + (200@40)).
 	registrosgui position: (registrosgui position + (400@40)).
-	flagsgui position: (flagsgui position + (400@130)).
-	alugui position: (alugui position + (400@230)).
-	b1gui position: (b1gui position + (360@230)).
-	b2gui position: (b2gui position + (360@270)).
-	b3gui position: (b3gui position + (510@230)).
-	b4gui position: (b4gui position + (510@270)).
-	mbrgui position: (mbrgui position + (400@360)).
-	margui position: (margui position + (460@360)).
-	memorygui position: (memorygui position + (550@360)).
+	axgui position: (axgui position + (400@60)).
+	bxgui position: (bxgui position + (450@60)).
+	cxgui position: (cxgui position + (400@110)).
+	dxgui position: (dxgui position + (450@110)).
+	flagsgui position: (flagsgui position + (400@180)).
+	carrygui position: (carrygui position + (400@200)).
+	signgui position: (signgui position + (450@200)).
+	zerogui position: (zerogui position + (400@240)).
+	interruptgui position: (interruptgui position + (450@240)).
+	alugui position: (alugui position + (400@300)).
+	b1gui position: (b1gui position + (340@300)).
+	b2gui position: (b2gui position + (340@360)).
+	b3gui position: (b3gui position + (510@300)).
+	b4gui position: (b4gui position + (510@360)).
+	mbrgui position: (mbrgui position + (400@430)).
+	margui position: (margui position + (460@430)).
+	memorygui position: (memorygui position + (550@430)).
+	cuvalue position: (cutext position + (0@12)).
+	irvalue position: (irtext position + (0@12)).
+	pcvalue position: (pctext position + (0@12)).
+	busvalue position: (bustext position + (0@12)).
+	registrosvalue position: (registrostext position + (0@12)).
+	axvalue position: (axtext position + (0@12)).
+	bxvalue position: (bxtext position + (0@12)).
+	cxvalue position: (cxtext position + (0@12)).
+	dxvalue position: (dxtext position + (0@12)).
+	flagsvalue position: (flagstext position + (0@12)).
+	carryvalue position: (carrytext position + (0@12)).
+	signvalue position: (signtext position + (0@12)).
+	zerovalue position: (zerotext position + (0@12)).
+	interruptvalue position: (interrupttext position + (0@12)).
+	aluvalue position: (alutext position + (0@12)).
+	b1value position: (b1text position + (0@12)).
+	b2value position: (b2text position + (0@12)).
+	b3value position: (b3text position + (0@12)).
+	b4value position: (b4text position + (0@12)).
+	mbrvalue position: (mbrtext position + (0@12)).
+	marvalue position: (martext position + (0@12)).
+	memoryvalue position: (memorytext position + (0@12)).
 	
 	cugui extent: 100@100.
 	irgui extent:110@50.
 	pcgui extent: 110@50.
 	busgui extent: 70@300.
-	registrosgui extent: 80@80. 
-	flagsgui extent: 80@80.
+	registrosgui extent:100@20.
+	axgui extent: 50@50.
+	bxgui extent: 50@50.
+	cxgui extent: 50@50.
+	dxgui extent: 50@50.
+	flagsgui extent: 100@20.
+	carrygui extent: 50@40.
+	signgui extent: 50@40.
+	zerogui extent: 50@40.
+	interruptgui extent: 50@40.
 	alugui extent: 100@100.
-	b1gui extent: 30@30.
-	b2gui extent: 30@30.
-	b3gui extent: 30@30.
-	b4gui extent: 30@30.
+	b1gui extent: 50@50.
+	b2gui extent: 50@50.
+	b3gui extent: 50@50.
+	b4gui extent: 50@50.
 	mbrgui extent: 50@50.
 	margui extent: 50@50.	
 	memorygui extent: 200@200.
