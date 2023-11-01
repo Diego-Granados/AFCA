@@ -40,15 +40,17 @@ ALUnit >> add [
 	(busdatos flags) clz .
 	number1 := b1 complete .
 	number2 := b2 complete .
-	((number1 > 0) and: (number2 > 0)) whileTrue:
-		[	digit1 := number1 \\ 10 . 
-			digit2 := number2 \\ 10 . 
-			((digit1 + digit2) > 9) ifTrue: 
-				[ (busdatos flags) stc ]
-			 ifFalse:  
-				[number1 := number1 // 10 .
-				number2 := number2 // 10 .] 
-		] .
+	[(number1 > 0) and: (number2 > 0)] whileTrue: [
+    digit1 := number1 \\ 10.
+    digit2 := number2 \\ 10.
+    ((digit1 + digit2) > 9) ifTrue: [
+        (busdatos flags) stc
+    ] ifFalse: [
+        number1 := number1 // 10.
+        number2 := number2 // 10.
+    ].
+	].
+
 	value := ((b1 complete) + (b2 complete)) .
 	value := value bitAnd: 65535 .
 	(value < 0) ifTrue: [ (busdatos flags) sts ] .
@@ -164,15 +166,17 @@ ALUnit >> sub [
 	(busdatos flags) clz .
 	number1 := b1 complete .
 	number2 := b2 complete .
-	((number1 > 0) and: (number2 > 0)) whileTrue:
-		[	digit1 := number1 \\ 10 . 
-			digit2 := number2 \\ 10 . 
-			(digit1 < digit2) ifTrue: 
-				[ (busdatos flags) stc ]
-			 ifFalse:  
-				[number1 := number1 // 10 .
-				number2 := number2 // 10 .] 
-		] .
+	[(number1 > 0) and: (number2 > 0)] whileTrue: [
+    digit1 := number1 \\ 10.
+    digit2 := number2 \\ 10.
+    (digit1 < digit2) ifTrue: [
+        (busdatos flags) stc
+    ] ifFalse: [
+        number1 := number1 // 10.
+        number2 := number2 // 10.
+    ].
+	].
+
 	value := ((b1 complete) - (b2 complete)) .
 	value := value bitAnd: 65535 .
 	(value < 0) ifTrue: [ (busdatos flags) sts ] .

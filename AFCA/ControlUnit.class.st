@@ -567,7 +567,7 @@ ControlUnit >> opmemtoreg: direccion secondParameter: operando1 operation: op [
 	(op = 'mul') ifTrue: [ 
 	(busDatos alu) mul . ].
 	(op = 'div') ifTrue: [ 
-	(busDatos alu) add . 
+	(busDatos alu) div . 
 	self updateRegister: 'b4' secondParameter: (((busDatos alu) b4) complete) .
 	].
 	(op = 'and') ifTrue: [ 
@@ -599,7 +599,7 @@ ControlUnit >> opregtomem: operando1 secondParameter: direccion operation: op [
 	(op = 'mul') ifTrue: [ 
 	(busDatos alu) mul . ].
 	(op = 'div') ifTrue: [ 
-	(busDatos alu) add . 
+	(busDatos alu) div . 
 	self updateRegister: 'b4' secondParameter: (((busDatos alu) b4) complete) .
 	].
 	(op = 'and') ifTrue: [ 
@@ -637,7 +637,7 @@ ControlUnit >> opregtoreg: operando1 secondParameter: operando2 operation: op [
 	(op = 'mul') ifTrue: [ 
 	(busDatos alu) mul . ].
 	(op = 'div') ifTrue: [ 
-	(busDatos alu) add . 
+	(busDatos alu) div . 
 	self updateRegister: 'b4' secondParameter: (((busDatos alu) b4) complete) .
 	].
 	(op = 'and') ifTrue: [ 

@@ -78,3 +78,8 @@ Register >> low [
 Register >> low: value [
 	(value < 256) ifTrue: [ low := value ] .
 ]
+
+{ #category : #accessing }
+Register >> name [
+ ^name
+]
