@@ -42,6 +42,11 @@ DataBus >> alu [
 ]
 
 { #category : #accessing }
+DataBus >> cu [
+	^controlU.
+]
+
+{ #category : #accessing }
 DataBus >> flags [
 	^flags
 ]
