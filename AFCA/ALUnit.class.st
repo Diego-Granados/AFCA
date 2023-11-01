@@ -40,17 +40,20 @@ ALUnit >> add [
 	(busdatos flags) clz .
 	number1 := b1 complete .
 	number2 := b2 complete .
-	((number1 > 0) and: (number2 > 0)) whileTrue:
-		[	digit1 := number1 \\ 10 . 
-			digit2 := number2 \\ 10 . 
-			((digit1 + digit2) > 9) ifTrue: 
-				[ (busdatos flags) stc ]
-			 ifFalse:  
-				[number1 := number1 // 10 .
-				number2 := number2 // 10 .] 
-		] .
+	[(number1 > 0) and: (number2 > 0)] whileTrue: [
+    digit1 := number1 \\ 10.
+    digit2 := number2 \\ 10.
+    ((digit1 + digit2) > 9) ifTrue: [
+        (busdatos flags) stc .
+			number1 := 0.
+        number2 := 0.
+    ] ifFalse: [
+        number1 := number1 // 10.
+        number2 := number2 // 10.
+    ].
+	].
+
 	value := ((b1 complete) + (b2 complete)) .
-	value := value bitAnd: 65535 .
 	(value < 0) ifTrue: [ (busdatos flags) sts ] .
 	(value = 0) ifTrue: [ (busdatos flags) stz ] .
 	b3 complete: value .
@@ -85,7 +88,6 @@ ALUnit >> b4 [
 ALUnit >> div [
 	| value |
 	value := ((b1 complete) // (b2 complete)) .
-	value := value bitAnd: 65535 .
 	(value < 0) ifTrue: [ (busdatos flags) sts ] .
 	(value = 0) ifTrue: [ (busdatos flags) stz ] .
 	b3 complete: value .
@@ -115,7 +117,6 @@ ALUnit >> initialize: busdedatos [
 ALUnit >> mul [
 	| value |
 	value := ((b1 complete) * (b2 complete)) .
-	value := value bitAnd: 65535 .
 	(value < 0) ifTrue: [ (busdatos flags) sts ] .
 	(value = 0) ifTrue: [ (busdatos flags) stz ] .
 	b3 complete: value
@@ -138,7 +139,6 @@ ALUnit >> shl [
 	(busdatos flags) clz .
 	value := 	((b1 complete) bitShift: (-1 * (b2 complete))).
 	(value > 65535) ifTrue: [ (busdatos flags) stc .] .
-	value := value bitAnd: 65535 .
 	(value = 0) ifTrue: [ (busdatos flags) stz . ] .
 	b3 complete: value
 ]
@@ -164,17 +164,20 @@ ALUnit >> sub [
 	(busdatos flags) clz .
 	number1 := b1 complete .
 	number2 := b2 complete .
-	((number1 > 0) and: (number2 > 0)) whileTrue:
-		[	digit1 := number1 \\ 10 . 
-			digit2 := number2 \\ 10 . 
-			(digit1 < digit2) ifTrue: 
-				[ (busdatos flags) stc ]
-			 ifFalse:  
-				[number1 := number1 // 10 .
-				number2 := number2 // 10 .] 
-		] .
+	[(number1 > 0) and: (number2 > 0)] whileTrue: [
+    digit1 := number1 \\ 10.
+    digit2 := number2 \\ 10.
+    (digit1 < digit2) ifTrue: [
+        (busdatos flags) stc .
+			number1 := 0.
+        number2 := 0.
+    ] ifFalse: [
+        number1 := number1 // 10.
+        number2 := number2 // 10.
+    ].
+	].
+
 	value := ((b1 complete) - (b2 complete)) .
-	value := value bitAnd: 65535 .
 	(value < 0) ifTrue: [ (busdatos flags) sts ] .
 	(value = 0) ifTrue: [ (busdatos flags) stz ] .
 	b3 complete: value
