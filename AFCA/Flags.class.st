@@ -37,31 +37,31 @@ Flags >> carry [
 
 { #category : #flags }
 Flags >> clc [
-	carry := false .
+	carry := 0 .
 ]
 
 { #category : #flags }
 Flags >> cli [
-	interrupt := false .
+	interrupt := 0 .
 ]
 
 { #category : #flags }
 Flags >> cls [
-	sign := false .
+	sign := 0 .
 ]
 
 { #category : #flags }
 Flags >> clz [
-	zero := false .
+	zero := 0 .
 ]
 
 { #category : #initialization }
 Flags >> initialize [ 
 	super initialize .
-	carry := false .
-	sign := false .
-	zero := false .
-	interrupt := false.
+	carry := 0 .
+	sign := 0 .
+	zero := 0 .
+	interrupt := 0.
 ]
 
 { #category : #accessing }
@@ -76,22 +76,22 @@ Flags >> sign [
 
 { #category : #flags }
 Flags >> stc [
-	carry := true .
+	carry := 1 .
 ]
 
 { #category : #flags }
 Flags >> sti [
-	interrupt := true .
+	interrupt := 1 .
 ]
 
 { #category : #flags }
 Flags >> sts [
-	sign := true .
+	sign := 1 .
 ]
 
 { #category : #flags }
 Flags >> stz [
-	zero := true .
+	zero := 1 .
 ]
 
 { #category : #accessing }

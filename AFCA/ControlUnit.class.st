@@ -581,6 +581,9 @@ ControlUnit >> opmemtoreg: direccion secondParameter: operando1 operation: op [
 	(op = 'shr') ifTrue: [ 
 	(busDatos alu) shl . ].
 	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
+	self updateRegister: 'carry' secondParameter: ((busDatos flags) carry) .
+	self updateRegister: 'sign' secondParameter: ((busDatos flags) sign) .
+	self updateRegister: 'zero' secondParameter: ((busDatos flags) zero) .
 	(op = 'cmp') ifFalse: [ 
 	self movregtomem: ((busDatos alu) b3) secondParameter: direccion . ].
 ]
@@ -613,8 +616,11 @@ ControlUnit >> opregtomem: operando1 secondParameter: direccion operation: op [
 	(op = 'shr') ifTrue: [ 
 	(busDatos alu) shl . ].
 	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
-	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
+	self updateRegister: 'carry' secondParameter: ((busDatos flags) carry) .
+	self updateRegister: 'sign' secondParameter: ((busDatos flags) sign) .
+	self updateRegister: 'zero' secondParameter: ((busDatos flags) zero) .
 	(op = 'cmp') ifFalse: [
+	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
 	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
 	self arrow: operando1 secondParameter: (busDatos temporary) .
 	self updateRegister: (operando1 name) secondParameter: (operando1 complete) . ].
@@ -651,6 +657,9 @@ ControlUnit >> opregtoreg: operando1 secondParameter: operando2 operation: op [
 	(op = 'shr') ifTrue: [ 
 	(busDatos alu) shl . ].
 	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
+	self updateRegister: 'carry' secondParameter: ((busDatos flags) carry) .
+	self updateRegister: 'sign' secondParameter: ((busDatos flags) sign) .
+	self updateRegister: 'zero' secondParameter: ((busDatos flags) zero) .
 	(op = 'cmp') ifFalse: [
 	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
 	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
