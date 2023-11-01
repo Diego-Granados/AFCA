@@ -146,32 +146,47 @@ Class {
 
 { #category : #operating }
 ControlUnit >> addmemtoreg: direccion secondParameter: operando1 [
-	self movmemtoreg: ((busDatos alu) b1) secondParameter: direccion .
+	self movmemtoreg: direccion secondParameter: ((busDatos alu) b1) .
 	self arrow: (busDatos temporary) secondParameter: operando1 . 
+	self updateRegister: 'bus' secondParameter: (operando1 complete) .
 	self arrow: ((busDatos alu) b2) secondParameter: (busDatos temporary) . 
+	self updateRegister: 'b2' secondParameter: (((busDatos alu) b2) complete) .
 	(busDatos alu) add .
+	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
 	self movregtomem: ((busDatos alu) b3) secondParameter: direccion .
 ]
 
 { #category : #operating }
 ControlUnit >> addregtomem: operando1 secondParameter: direccion [
 	self arrow: (busDatos temporary) secondParameter: operando1 . 
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
 	self arrow: ((busDatos alu) b1) secondParameter: (busDatos temporary) . 
-	self movmemtoreg: ((busDatos alu) b2) secondParameter: direccion .
+	self updateRegister: 'b1' secondParameter: (((busDatos alu) b1) complete) .
+	self movmemtoreg: direccion secondParameter: ((busDatos alu) b2) .
 	(busDatos alu) add .
+	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
 	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
-	self arrow: operando1 secondParameter: (busDatos temporary) . 
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
+	self arrow: operando1 secondParameter: (busDatos temporary) .
+	self updateRegister: (operando1 name) secondParameter: (operando1 complete) . 
 ]
 
 { #category : #operating }
 ControlUnit >> addregtoreg: operando1 secondParameter: operando2 [
 	self arrow: (busDatos temporary) secondParameter: operando1 . 
+	self updateRegister: 'bus' secondParameter: (operando1 complete) .
 	self arrow: ((busDatos alu) b1) secondParameter: (busDatos temporary) . 
+	self updateRegister: 'b1' secondParameter: (((busDatos alu) b1) complete) .
 	self arrow: (busDatos temporary) secondParameter: operando2 . 
+	self updateRegister: 'bus' secondParameter: (operando2 complete) .
 	self arrow: ((busDatos alu) b2) secondParameter: (busDatos temporary) . 
+	self updateRegister: 'b2' secondParameter: (((busDatos alu) b2) complete) .
 	(busDatos alu) add .
+	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
 	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
 	self arrow: operando1 secondParameter: (busDatos temporary) . 
+	self updateRegister: (operando1 name) secondParameter: (operando1 complete) .
 ]
 
 { #category : #operating }
@@ -449,13 +464,13 @@ ControlUnit >> dx [
 { #category : #initialization }
 ControlUnit >> initialize [ 
 	super initialize .
-	instructionRegister := Register new.
+	instructionRegister := Register new initialize: 'ir'.
 	busDatos := DataBus new initialize: self.
-	programCounter := Register new.
-	ax := Register new.
-	bx := Register new.
-	cx := Register new.
-	dx := Register new.
+	programCounter := Register new initialize: 'pc'.
+	ax := Register new initialize: 'ax'.
+	bx := Register new initialize: 'bx'.
+	cx := Register new initialize: 'cx'.
+	dx := Register new initialize: 'dx'.
 	self creategui .
 	
 ]
@@ -478,36 +493,44 @@ ControlUnit >> jmpreg: register [
 
 { #category : #moving }
 ControlUnit >> movimtomem: immediate secondParameter: direccion [
-	self movimtoreg: ((busDatos memory) mbr) secondParameter: direccion . 
-	self movimtoreg: ((busDatos memory) mar) secondParameter: direccion . 
+	self movimtoreg: direccion secondParameter:((busDatos memory) mbr)  . 
+	self movimtoreg: direccion secondParameter: ((busDatos memory) mar) . 
 	(busDatos memory) overwrite .
 ]
 
 { #category : #moving }
 ControlUnit >> movimtoreg: immediate secondParameter: register [
 	register complete: immediate .
+	self updateRegister: (register name) secondParameter: immediate .
 ]
 
 { #category : #operating }
 ControlUnit >> movmemtoreg: direccion secondParameter: registro [
-	self movimtoreg: ((busDatos memory) mar) secondParameter: direccion . 
+	self movimtoreg: direccion secondParameter: ((busDatos memory) mar) . 
 	(busDatos memory) read .
+	self updateRegister: 'mbr' secondParameter: (((busDatos memory) mbr) complete) .
 	self arrow: (busDatos temporary) secondParameter: ((busDatos memory) mbr) . 
+	self updateRegister: 'bus' secondParameter: (((busDatos memory) mbr) complete).
 	self arrow: registro secondParameter: (busDatos temporary) . 
+	self updateRegister: (registro name) secondParameter: (registro complete) .
 ]
 
 { #category : #moving }
 ControlUnit >> movregtomem: register1 secondParameter: direccion [
 	self arrow: (busDatos temporary) secondParameter: register1 . 
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
 	self arrow: ((busDatos memory) mbr) secondParameter: (busDatos temporary) . 
-	self movimtoreg: ((busDatos memory) mar) secondParameter: direccion . 
+	self updateRegister: 'mbr' secondParameter: (((busDatos memory) mbr) complete) .
+	self movimtoreg: direccion secondParameter: ((busDatos memory) mar) . 
 	(busDatos memory) overwrite .
 ]
 
 { #category : #moving }
 ControlUnit >> movregtoreg: register1 secondParameter: register2 [
 	self arrow: (busDatos temporary) secondParameter: register1 . 
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
 	self arrow: register2 secondParameter: (busDatos temporary) . 
+	self updateRegister: (register2 name) secondParameter: (register2 complete) .
 ]
 
 { #category : #operating }
@@ -528,6 +551,111 @@ ControlUnit >> not: operando1 [
 	(busDatos alu) not .
 	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
 	self arrow: operando1 secondParameter: (busDatos temporary) . 
+]
+
+{ #category : #operating }
+ControlUnit >> opmemtoreg: direccion secondParameter: operando1 operation: op [
+	self movmemtoreg: direccion secondParameter: ((busDatos alu) b1) .
+	self arrow: (busDatos temporary) secondParameter: operando1 . 
+	self updateRegister: 'bus' secondParameter: (operando1 complete) .
+	self arrow: ((busDatos alu) b2) secondParameter: (busDatos temporary) . 
+	self updateRegister: 'b2' secondParameter: (((busDatos alu) b2) complete) .
+	(op = 'add') ifTrue: [ 
+	(busDatos alu) add . ].
+	((op = 'sub') or: (op = 'cmp')) ifTrue: [ 
+	(busDatos alu) sub . ].
+	(op = 'mul') ifTrue: [ 
+	(busDatos alu) mul . ].
+	(op = 'div') ifTrue: [ 
+	(busDatos alu) add . 
+	self updateRegister: 'b4' secondParameter: (((busDatos alu) b4) complete) .
+	].
+	(op = 'and') ifTrue: [ 
+	(busDatos alu) and . ].
+	(op = 'or') ifTrue: [ 
+	(busDatos alu) or . ].
+	(op = 'xor') ifTrue: [ 
+	(busDatos alu) xor . ].
+	(op = 'shl') ifTrue: [ 
+	(busDatos alu) shl . ].
+	(op = 'shr') ifTrue: [ 
+	(busDatos alu) shl . ].
+	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
+	(op = 'cmp') ifFalse: [ 
+	self movregtomem: ((busDatos alu) b3) secondParameter: direccion . ].
+]
+
+{ #category : #operating }
+ControlUnit >> opregtomem: operando1 secondParameter: direccion operation: op [
+	self arrow: (busDatos temporary) secondParameter: operando1 . 
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
+	self arrow: ((busDatos alu) b1) secondParameter: (busDatos temporary) . 
+	self updateRegister: 'b1' secondParameter: (((busDatos alu) b1) complete) .
+	self movmemtoreg: direccion secondParameter: ((busDatos alu) b2) .
+	(op = 'add') ifTrue: [ 
+	(busDatos alu) add . ].
+	((op = 'sub') or: (op = 'cmp')) ifTrue: [ 
+	(busDatos alu) sub . ].
+	(op = 'mul') ifTrue: [ 
+	(busDatos alu) mul . ].
+	(op = 'div') ifTrue: [ 
+	(busDatos alu) add . 
+	self updateRegister: 'b4' secondParameter: (((busDatos alu) b4) complete) .
+	].
+	(op = 'and') ifTrue: [ 
+	(busDatos alu) and . ].
+	(op = 'or') ifTrue: [ 
+	(busDatos alu) or . ].
+	(op = 'xor') ifTrue: [ 
+	(busDatos alu) xor . ].
+	(op = 'shl') ifTrue: [ 
+	(busDatos alu) shl . ].
+	(op = 'shr') ifTrue: [ 
+	(busDatos alu) shl . ].
+	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
+	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
+	(op = 'cmp') ifFalse: [
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
+	self arrow: operando1 secondParameter: (busDatos temporary) .
+	self updateRegister: (operando1 name) secondParameter: (operando1 complete) . ].
+]
+
+{ #category : #operating }
+ControlUnit >> opregtoreg: operando1 secondParameter: operando2 operation: op [
+	self arrow: (busDatos temporary) secondParameter: operando1 . 
+	self updateRegister: 'bus' secondParameter: (operando1 complete) .
+	self arrow: ((busDatos alu) b1) secondParameter: (busDatos temporary) . 
+	self updateRegister: 'b1' secondParameter: (((busDatos alu) b1) complete) .
+	self arrow: (busDatos temporary) secondParameter: operando2 . 
+	self updateRegister: 'bus' secondParameter: (operando2 complete) .
+	self arrow: ((busDatos alu) b2) secondParameter: (busDatos temporary) . 
+	self updateRegister: 'b2' secondParameter: (((busDatos alu) b2) complete) .
+	(op = 'add') ifTrue: [ 
+	(busDatos alu) add . ].
+	((op = 'sub') or: (op = 'cmp')) ifTrue: [ 
+	(busDatos alu) sub . ].
+	(op = 'mul') ifTrue: [ 
+	(busDatos alu) mul . ].
+	(op = 'div') ifTrue: [ 
+	(busDatos alu) add . 
+	self updateRegister: 'b4' secondParameter: (((busDatos alu) b4) complete) .
+	].
+	(op = 'and') ifTrue: [ 
+	(busDatos alu) and . ].
+	(op = 'or') ifTrue: [ 
+	(busDatos alu) or . ].
+	(op = 'xor') ifTrue: [ 
+	(busDatos alu) xor . ].
+	(op = 'shl') ifTrue: [ 
+	(busDatos alu) shl . ].
+	(op = 'shr') ifTrue: [ 
+	(busDatos alu) shl . ].
+	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
+	(op = 'cmp') ifFalse: [
+	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
+	self arrow: operando1 secondParameter: (busDatos temporary) . 
+	self updateRegister: (operando1 name) secondParameter: (operando1 complete) . ].
 ]
 
 { #category : #operating }
@@ -598,6 +726,62 @@ ControlUnit >> test: flag secondParameter: n [
 	]. 
 	^false
 	
+]
+
+{ #category : #gui }
+ControlUnit >> updateRegister: register secondParameter: value [
+
+	register = 'ax' ifTrue: [
+		axvalue contents: value asString.
+		^ value ].
+	register = 'bx' ifTrue: [
+		bxvalue contents: value asString.
+		^ value ].
+	register = 'cx' ifTrue: [
+		cxvalue contents: value asString.
+		^ value ].
+	register = 'dx' ifTrue: [
+		dxvalue contents: value asString.
+		^ value ].
+	register = 'b1' ifTrue: [
+		b1value contents: value asString.
+		^ value ].
+	register = 'b2' ifTrue: [
+		b2value contents: value asString.
+		^ value ].
+	register = 'b3' ifTrue: [
+		b3value contents: value asString.
+		^ value ].
+	register = 'b4' ifTrue: [
+		b4value contents: value asString.
+		^ value ].
+	register = 'ir' ifTrue: [
+		irvalue contents: value asString.
+		^ value ].
+	register = 'pc' ifTrue: [
+		pcvalue contents: value asString.
+		^ value ].
+	register = 'mar' ifTrue: [
+		marvalue contents: value asString.
+		^ value ].
+	register = 'mbr' ifTrue: [
+		mbrvalue contents: value asString.
+		^ value ].
+	register = 'carry' ifTrue: [
+		carryvalue contents: value asString.
+		^ value ].
+	register = 'sign' ifTrue: [
+		signvalue contents: value asString.
+		^ value ].
+	register = 'zero' ifTrue: [
+		zerovalue contents: value asString.
+		^ value ].
+	register = 'interrupt' ifTrue: [
+		interruptvalue contents: value asString.
+		^ value ].
+	register = 'bus' ifFalse: [ ^ self ].
+	busvalue contents: value asString.
+	^ value
 ]
 
 { #category : #operating }

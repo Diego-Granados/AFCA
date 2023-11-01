@@ -23,7 +23,8 @@ Class {
 	#instVars : [
 		'high',
 		'low',
-		'complete'
+		'complete',
+		'name'
 	],
 	#category : #AFCA
 }
@@ -56,6 +57,15 @@ Register >> initialize [
 	high := 0.
 	low := 0.
 	complete := 0.
+	
+]
+
+{ #category : #initialization }
+Register >> initialize: pName [
+	high := 0.
+	low := 0.
+	complete := 0.
+	name := pName .
 	
 ]
 

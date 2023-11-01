@@ -26,8 +26,6 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'controlU',
-		'mar',
-		'mbr',
 		'alu',
 		'flags',
 		'temporary',
@@ -54,11 +52,9 @@ DataBus >> flags [
 { #category : #initialization }
 DataBus >> initialize: cu [
 	controlU := cu .
-	mar := Register new.
-	mbr := Register new.
 	alu := ALUnit new initialize: self.
 	flags := Flags new.
-	temporary := Register new.
+	temporary := Register new initialize: 'bus'.
 	memory := Memory new.
 	
 ]

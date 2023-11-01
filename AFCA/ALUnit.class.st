@@ -41,13 +41,13 @@ ALUnit >> add [
 	number1 := b1 complete .
 	number2 := b2 complete .
 	((number1 > 0) and: (number2 > 0)) whileTrue:
-		[	digit1 := number1 // 10 . 
-			digit2 := number2 // 10 . 
+		[	digit1 := number1 \\ 10 . 
+			digit2 := number2 \\ 10 . 
 			((digit1 + digit2) > 9) ifTrue: 
 				[ (busdatos flags) stc ]
 			 ifFalse:  
-				[number1 := number1 \\ 10 .
-				number2 := number2 \\ 10 .] 
+				[number1 := number1 // 10 .
+				number2 := number2 // 10 .] 
 		] .
 	value := ((b1 complete) + (b2 complete)) .
 	value := value bitAnd: 65535 .
@@ -84,20 +84,20 @@ ALUnit >> b4 [
 { #category : #operating }
 ALUnit >> div [
 	| value |
-	value := ((b1 complete) \\ (b2 complete)) .
+	value := ((b1 complete) // (b2 complete)) .
 	value := value bitAnd: 65535 .
 	(value < 0) ifTrue: [ (busdatos flags) sts ] .
 	(value = 0) ifTrue: [ (busdatos flags) stz ] .
 	b3 complete: value .
-	b4 complete: ((b1 complete) // (b2 complete)) .
+	b4 complete: ((b1 complete) \\ (b2 complete)) .
 ]
 
 { #category : #initialization }
 ALUnit >> initialize [ 
-	b1 := Register new.
-	b2 := Register new.
-	b3 := Register new.
-	b4 := Register new.
+	b1 := Register new initialize: 'b1'.
+	b2 := Register new initialize: 'b2'.
+	b3 := Register new initialize: 'b3'.
+	b4 := Register new initialize: 'b4'.
 	
 ]
 
@@ -149,7 +149,7 @@ ALUnit >> shr [
 	(busdatos flags) clc .
 	(busdatos flags) clz .
 	value := 	((b1 complete) bitShift: ((b2 complete) - 1)).
-	digit := value // 2 . 
+	digit := value \\ 2 . 
 	(digit = 1) ifTrue: [ (busdatos flags) stc .] .
 	value := value bitShift: 1 .
 	(value = 0) ifTrue: [ (busdatos flags) stz . ] .
@@ -165,13 +165,13 @@ ALUnit >> sub [
 	number1 := b1 complete .
 	number2 := b2 complete .
 	((number1 > 0) and: (number2 > 0)) whileTrue:
-		[	digit1 := number1 // 10 . 
-			digit2 := number2 // 10 . 
+		[	digit1 := number1 \\ 10 . 
+			digit2 := number2 \\ 10 . 
 			(digit1 < digit2) ifTrue: 
 				[ (busdatos flags) stc ]
 			 ifFalse:  
-				[number1 := number1 \\ 10 .
-				number2 := number2 \\ 10 .] 
+				[number1 := number1 // 10 .
+				number2 := number2 // 10 .] 
 		] .
 	value := ((b1 complete) - (b2 complete)) .
 	value := value bitAnd: 65535 .
