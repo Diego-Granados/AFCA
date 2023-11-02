@@ -71,9 +71,17 @@ Class {
 		'busDatos',
 		'programCounter',
 		'ax',
+		'ah',
+		'al',
 		'bx',
+		'bh',
+		'bl',
 		'cx',
+		'ch',
+		'cl',
 		'dx',
+		'dh',
+		'dl',
 		'cugui',
 		'irgui',
 		'pcgui',
@@ -139,7 +147,8 @@ Class {
 		'carryvalue',
 		'signvalue',
 		'zerovalue',
-		'interruptvalue'
+		'interruptvalue',
+		'openFileButton'
 	],
 	#category : #AFCA
 }
@@ -189,6 +198,18 @@ ControlUnit >> addregtoreg: operando1 secondParameter: operando2 [
 	self updateRegister: (operando1 name) secondParameter: (operando1 complete) .
 ]
 
+{ #category : #accessing }
+ControlUnit >> ah [
+	^ah
+
+]
+
+{ #category : #accessing }
+ControlUnit >> al [
+	^al
+
+]
+
 { #category : #operating }
 ControlUnit >> and: operando1 secondParameter: operando2 [
 	self arrow: (busDatos temporary) secondParameter: operando1 . 
@@ -200,11 +221,11 @@ ControlUnit >> and: operando1 secondParameter: operando2 [
 	self arrow: operando1 secondParameter: (busDatos temporary) . 
 ]
 
-{ #category : #microinstructions }
+{ #category : #accessing }
 ControlUnit >> arrow: destino secondParameter: fuente [
+	"Microinstrucción de <- para mover datos de registro X a registro Y."
 	destino complete: (fuente complete) . 
- 
-	
+
 ]
 
 { #category : #accessing }
@@ -213,8 +234,32 @@ ControlUnit >> ax [
 ]
 
 { #category : #accessing }
+ControlUnit >> bh [
+	^bh
+
+]
+
+{ #category : #accessing }
+ControlUnit >> bl [
+	^bl
+
+]
+
+{ #category : #accessing }
 ControlUnit >> bx [
 ^bx
+]
+
+{ #category : #accessing }
+ControlUnit >> ch [
+	^ch
+
+]
+
+{ #category : #accessing }
+ControlUnit >> cl [
+	^cl
+
 ]
 
 { #category : #comparing }
@@ -435,12 +480,22 @@ ControlUnit >> creategui [
 	memorygui extent: 200@200.
 	
 	
-	
+	openFileButton := SimpleButtonMorph new.
+	openFileButton label: 'Cargar programa' .
+	openFileButton on: #click send: #infile to: self.
+	openFileButton openInWorld.
+	openFileButton position: (openFileButton position + (40@600)).
 ]
 
 { #category : #accessing }
 ControlUnit >> cx [
 ^cx
+]
+
+{ #category : #accessing }
+ControlUnit >> dh [
+	^dh
+
 ]
 
 { #category : #operating }
@@ -457,20 +512,50 @@ ControlUnit >> div: operando1 secondParameter: operando2 [
 ]
 
 { #category : #accessing }
+ControlUnit >> dl [
+	^dl
+
+]
+
+{ #category : #accessing }
 ControlUnit >> dx [
 ^dx
+]
+
+{ #category : #'file support' }
+ControlUnit >> infile [
+	|gui answer instructions|
+	gui := UIManager default.
+	answer := gui request: '¿Cuál es el nombre del archivo?' initialAnswer: 'program.asm' .
+	answer ifNotNil: [ 
+		instructions := self openFile: answer.
+		instructions ifNotNil: [ 
+			
+		]					
+	] .
+	
+
 ]
 
 { #category : #initialization }
 ControlUnit >> initialize [ 
 	super initialize .
-	instructionRegister := Register new initialize: 'ir'.
+	instructionRegister := Subregister new initialize: 'ir'.
 	busDatos := DataBus new initialize: self.
-	programCounter := Register new initialize: 'pc'.
-	ax := Register new initialize: 'ax'.
-	bx := Register new initialize: 'bx'.
-	cx := Register new initialize: 'cx'.
-	dx := Register new initialize: 'dx'.
+	programCounter := Subregister new initialize: 'pc'.
+	ah := Subregister new initialize: 'ah'.
+	al := Subregister new initialize: 'al'.
+	ax := Register new initialize: 'ax' high: ah low: al.
+	bh := Subregister new initialize: 'bh'.
+	bl := Subregister new initialize: 'bl'.
+	bx := Register new initialize: 'bx' high: bh low: bl.
+	ch := Subregister new initialize: 'ch'.
+	cl := Subregister new initialize: 'cl'.
+	cx := Register new initialize: 'cx' high: ch low: cl.
+	dh := Subregister new initialize: 'dh'.
+	dl := Subregister new initialize: 'dl'.
+	dx := Register new initialize: 'dx' high: dh low: dl.
+
 	self creategui .
 	
 ]
@@ -493,44 +578,54 @@ ControlUnit >> jmpreg: register [
 
 { #category : #moving }
 ControlUnit >> movimtomem: immediate secondParameter: direccion [
+	"Simula la instruccion de mov de un inmediato a una posición en memoria"
 	self movimtoreg: direccion secondParameter:((busDatos memory) mbr)  . 
 	self movimtoreg: direccion secondParameter: ((busDatos memory) mar) . 
 	(busDatos memory) overwrite .
+
 ]
 
 { #category : #moving }
 ControlUnit >> movimtoreg: immediate secondParameter: register [
+	"Simula la instruccion de mov de un inmediato a un registro"
 	register complete: immediate .
-	self updateRegister: (register name) secondParameter: immediate .
+	self updateRegister: register .
+
 ]
 
 { #category : #operating }
 ControlUnit >> movmemtoreg: direccion secondParameter: registro [
+	"Simula la instruccion de mov del contenido de una posición en memoria a un registro"
 	self movimtoreg: direccion secondParameter: ((busDatos memory) mar) . 
 	(busDatos memory) read .
 	self updateRegister: 'mbr' secondParameter: (((busDatos memory) mbr) complete) .
 	self arrow: (busDatos temporary) secondParameter: ((busDatos memory) mbr) . 
 	self updateRegister: 'bus' secondParameter: (((busDatos memory) mbr) complete).
 	self arrow: registro secondParameter: (busDatos temporary) . 
-	self updateRegister: (registro name) secondParameter: (registro complete) .
+	self updateRegister: registro .
+
 ]
 
 { #category : #moving }
 ControlUnit >> movregtomem: register1 secondParameter: direccion [
+	"Simula la instruccion de mov de un registro a una posición en memoria"
 	self arrow: (busDatos temporary) secondParameter: register1 . 
 	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
 	self arrow: ((busDatos memory) mbr) secondParameter: (busDatos temporary) . 
 	self updateRegister: 'mbr' secondParameter: (((busDatos memory) mbr) complete) .
 	self movimtoreg: direccion secondParameter: ((busDatos memory) mar) . 
 	(busDatos memory) overwrite .
+
 ]
 
 { #category : #moving }
 ControlUnit >> movregtoreg: register1 secondParameter: register2 [
+	"Simula la instruccion de mov de un registro a un registro"
 	self arrow: (busDatos temporary) secondParameter: register1 . 
 	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
 	self arrow: register2 secondParameter: (busDatos temporary) . 
-	self updateRegister: (register2 name) secondParameter: (register2 complete) .
+	self updateRegister: register2 .
+
 ]
 
 { #category : #operating }
@@ -546,11 +641,18 @@ ControlUnit >> mulregtoreg: operando1 secondParameter: operando2 [
 
 { #category : #operating }
 ControlUnit >> not: operando1 [
-	self arrow: (busDatos temporary) secondParameter: operando1 . 
+	"Instruccion de ensamblador que hace el not"
+	self arrow: (busDatos temporary) secondParameter: operando1 .
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
 	self arrow: ((busDatos alu) b1) secondParameter: (busDatos temporary) . 
+	self updateRegister: 'b1' secondParameter: (((busDatos alu) b1) complete) .
 	(busDatos alu) not .
+	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
 	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
 	self arrow: operando1 secondParameter: (busDatos temporary) . 
+	self updateRegister: operando1 .
+
 ]
 
 { #category : #'file support' }
@@ -602,47 +704,14 @@ ControlUnit >> openFile: fileName [
 			instructionArray add: (Instruction new initialize: (parts at:1) destino: (parts at:2) fuente: (parts at:3)) .
 		].
 		^ instructionArray .
-	].
+	] ifFalse: [UIManager default inform: 'Ese archivo no existe'.].
 	
 ]
 
 { #category : #operating }
-ControlUnit >> opmemtoreg: direccion secondParameter: operando1 operation: op [
-	self movmemtoreg: direccion secondParameter: ((busDatos alu) b1) .
-	self arrow: (busDatos temporary) secondParameter: operando1 . 
-	self updateRegister: 'bus' secondParameter: (operando1 complete) .
-	self arrow: ((busDatos alu) b2) secondParameter: (busDatos temporary) . 
-	self updateRegister: 'b2' secondParameter: (((busDatos alu) b2) complete) .
-	(op = 'add') ifTrue: [ 
-	(busDatos alu) add . ].
-	((op = 'sub') or: (op = 'cmp')) ifTrue: [ 
-	(busDatos alu) sub . ].
-	(op = 'mul') ifTrue: [ 
-	(busDatos alu) mul . ].
-	(op = 'div') ifTrue: [ 
-	(busDatos alu) div . 
-	self updateRegister: 'b4' secondParameter: (((busDatos alu) b4) complete) .
-	].
-	(op = 'and') ifTrue: [ 
-	(busDatos alu) and . ].
-	(op = 'or') ifTrue: [ 
-	(busDatos alu) or . ].
-	(op = 'xor') ifTrue: [ 
-	(busDatos alu) xor . ].
-	(op = 'shl') ifTrue: [ 
-	(busDatos alu) shl . ].
-	(op = 'shr') ifTrue: [ 
-	(busDatos alu) shl . ].
-	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
-	self updateRegister: 'carry' secondParameter: ((busDatos flags) carry) .
-	self updateRegister: 'sign' secondParameter: ((busDatos flags) sign) .
-	self updateRegister: 'zero' secondParameter: ((busDatos flags) zero) .
-	(op = 'cmp') ifFalse: [ 
-	self movregtomem: ((busDatos alu) b3) secondParameter: direccion . ].
-]
-
-{ #category : #operating }
-ControlUnit >> opregtomem: operando1 secondParameter: direccion operation: op [
+ControlUnit >> opmemtoreg: operando1 secondParameter: direccion operation: op [
+	"Este método realiza operaciones de la unidad de ALU y actualiza registros según la operación especificada."
+	"Lo hace con un el valor en un registro a otro en memoria"
 	self arrow: (busDatos temporary) secondParameter: operando1 . 
 	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
 	self arrow: ((busDatos alu) b1) secondParameter: (busDatos temporary) . 
@@ -675,12 +744,73 @@ ControlUnit >> opregtomem: operando1 secondParameter: direccion operation: op [
 	(op = 'cmp') ifFalse: [
 	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
 	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
-	self arrow: operando1 secondParameter: (busDatos temporary) .
-	self updateRegister: (operando1 name) secondParameter: (operando1 complete) . ].
+	self arrow: operando1 secondParameter: (busDatos temporary) . 
+	self updateRegister: operando1 . ].
+
 ]
 
 { #category : #operating }
-ControlUnit >> opregtoreg: operando1 secondParameter: operando2 operation: op [
+ControlUnit >> opregtomem: direccion secondParameter: operando1 operation: op [
+	"Este método realiza operaciones de la unidad de ALU y actualiza registros según la operación especificada."
+	"Lo hace con un el valor en memoria a un registro"
+	self movmemtoreg: direccion secondParameter: ((busDatos alu) b1) . "Mueve datos desde la dirección a registro b1."
+	self arrow: (busDatos temporary) secondParameter: operando1 . "Actualiza el registro temporary con operando1."
+	self updateRegister: 'bus' secondParameter: (operando1 complete) . "Actualiza el registro 'bus' con operando1 complete."
+	self arrow: ((busDatos alu) b2) secondParameter: (busDatos temporary) . "Actualiza registro b2 con el valor de temporary."
+	self updateRegister: 'b2' secondParameter: (((busDatos alu) b2) complete) . "Actualiza b2 con su valor completo."
+
+	(op = 'add') ifTrue: [ 
+		(busDatos alu) add . "Realiza una suma si la operación es 'add'."
+	].
+
+	((op = 'sub') or: (op = 'cmp')) ifTrue: [ 
+		(busDatos alu) sub . "Realiza una resta si la operación es 'sub' o 'cmp'."
+	].
+
+	(op = 'mul') ifTrue: [ 
+		(busDatos alu) mul . "Realiza una multiplicación si la operación es 'mul'."
+	].
+
+	(op = 'div') ifTrue: [ 
+		(busDatos alu) div . "Realiza una división si la operación es 'div'."
+		self updateRegister: 'b4' secondParameter: (((busDatos alu) b4) complete) . "Actualiza el registro b4 con su valor completo."
+	].
+
+	(op = 'and') ifTrue: [ 
+		(busDatos alu) and . "Realiza una operación AND si la operación es 'and'."
+	].
+
+	(op = 'or') ifTrue: [ 
+		(busDatos alu) or . "Realiza una operación OR si la operación es 'or'."
+	].
+
+	(op = 'xor') ifTrue: [ 
+		(busDatos alu) xor . "Realiza una operación XOR si la operación es 'xor'."
+	].
+
+	(op = 'shl') ifTrue: [ 
+		(busDatos alu) shl . "Realiza un desplazamiento a la izquierda si la operación es 'shl'."
+	].
+
+	(op = 'shr') ifTrue: [ 
+		(busDatos alu) shl . "Realiza un desplazamiento a la izquierda si la operación es 'shr'."
+	].
+
+	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) . "Actualiza el registro b3 con su valor completo."
+	self updateRegister: 'carry' secondParameter: ((busDatos flags) carry) . "Actualiza el registro 'carry' con el valor de la bandera 'carry'."
+	self updateRegister: 'sign' secondParameter: ((busDatos flags) sign) . "Actualiza el registro 'sign' con el valor de la bandera 'sign'."
+	self updateRegister: 'zero' secondParameter: ((busDatos flags) zero) . "Actualiza el registro 'zero' con el valor de la bandera 'zero'."
+
+	(op = 'cmp') ifFalse: [ 
+		self movregtomem: ((busDatos alu) b3) secondParameter: direccion . "Si la operación no es 'cmp', mueve el valor de b3 a la dirección especificada."
+	].
+
+]
+
+{ #category : #operating }
+ControlUnit >> opregtoreg: operando2 secondParameter: operando1 operation: op [
+	"Este método realiza operaciones de la unidad de ALU y actualiza registros según la operación especificada."
+	"Lo hace con un el valor en un registro a un registro"
 	self arrow: (busDatos temporary) secondParameter: operando1 . 
 	self updateRegister: 'bus' secondParameter: (operando1 complete) .
 	self arrow: ((busDatos alu) b1) secondParameter: (busDatos temporary) . 
@@ -717,7 +847,8 @@ ControlUnit >> opregtoreg: operando1 secondParameter: operando2 operation: op [
 	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
 	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
 	self arrow: operando1 secondParameter: (busDatos temporary) . 
-	self updateRegister: (operando1 name) secondParameter: (operando1 complete) . ].
+	self updateRegister: operando1 . ].
+
 ]
 
 { #category : #operating }
@@ -791,8 +922,84 @@ ControlUnit >> test: flag secondParameter: n [
 ]
 
 { #category : #gui }
-ControlUnit >> updateRegister: register secondParameter: value [
+ControlUnit >> updateRegister: register [
+	| regUpdate reg value |
+	reg := (((register name) = 'al') or: ((register name) = 'ah'))
+					ifTrue: [ax]
+					ifFalse: [
+					(((register name) = 'bl') or: ((register name) = 'bh'))
+					ifTrue: [bx]	
+					ifFalse: [
+					(((register name) = 'cl') or: ((register name) = 'ch'))
+					ifTrue: [cx]
+					ifFalse: [
+					(((register name) = 'dl') or: ((register name) = 'dh'))
+					ifTrue: [dx]
+					ifFalse:	[register].
+						].
+					].
+				].
+	regUpdate := reg name.
+	value := reg complete .
+	
+	"Actualiza la interfaz grafica"
+	regUpdate = 'ax' ifTrue: [
+		axvalue contents: value asString.
+		^ value ].
+	regUpdate = 'bx' ifTrue: [
+		bxvalue contents: value asString.
+		^ value ].
+	regUpdate = 'cx' ifTrue: [
+		cxvalue contents: value asString.
+		^ value ].
+	regUpdate = 'dx' ifTrue: [
+		dxvalue contents: value asString.
+		^ value ].
+	regUpdate = 'b1' ifTrue: [
+		b1value contents: value asString.
+		^ value ].
+	regUpdate = 'b2' ifTrue: [
+		b2value contents: value asString.
+		^ value ].
+	regUpdate = 'b3' ifTrue: [
+		b3value contents: value asString.
+		^ value ].
+	regUpdate = 'b4' ifTrue: [
+		b4value contents: value asString.
+		^ value ].
+	regUpdate = 'ir' ifTrue: [
+		irvalue contents: value asString.
+		^ value ].
+	regUpdate = 'pc' ifTrue: [
+		pcvalue contents: value asString.
+		^ value ].
+	regUpdate = 'mar' ifTrue: [
+		marvalue contents: value asString.
+		^ value ].
+	regUpdate = 'mbr' ifTrue: [
+		mbrvalue contents: value asString.
+		^ value ].
+	regUpdate = 'carry' ifTrue: [
+		carryvalue contents: value asString.
+		^ value ].
+	regUpdate = 'sign' ifTrue: [
+		signvalue contents: value asString.
+		^ value ].
+	regUpdate = 'zero' ifTrue: [
+		zerovalue contents: value asString.
+		^ value ].
+	regUpdate = 'interrupt' ifTrue: [
+		interruptvalue contents: value asString.
+		^ value ].
+	regUpdate = 'bus' ifFalse: [ ^ self ].
+	busvalue contents: value asString.
+	^ value
 
+]
+
+{ #category : #gui }
+ControlUnit >> updateRegister: register secondParameter: value [
+	"Actualiza la interfaz grafica"
 	register = 'ax' ifTrue: [
 		axvalue contents: value asString.
 		^ value ].
@@ -844,6 +1051,7 @@ ControlUnit >> updateRegister: register secondParameter: value [
 	register = 'bus' ifFalse: [ ^ self ].
 	busvalue contents: value asString.
 	^ value
+
 ]
 
 { #category : #operating }

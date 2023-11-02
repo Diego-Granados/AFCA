@@ -24,21 +24,37 @@ Class {
 		'high',
 		'low',
 		'complete',
-		'name'
+		'name',
+		'bit16'
 	],
 	#category : #AFCA
 }
 
 { #category : #accessing }
+Register >> bit16 [
+	^ bit16 .
+
+]
+
+{ #category : #accessing }
+Register >> bit16: value [
+	bit16 := value
+
+]
+
+{ #category : #accessing }
 Register >> complete [
-^ (low + (high * 256))
+	complete := (low complete)+ ((high complete) * 256) .
+	^ complete .
+
 ]
 
 { #category : #accessing }
 Register >> complete: value [
-	(value < 65356) ifTrue: [ complete := value ] .
-	low := (value \\ 65356) .
-	high := (value // 65356) .
+	(value < 65535) ifTrue: [ complete := value ] .
+	low complete: (value bitAnd: 255) .
+	high complete: (value bitShift: -8) .
+
 ]
 
 { #category : #accessing }
@@ -48,7 +64,8 @@ Register >> high [
 
 { #category : #accessing }
 Register >> high: value [
-	(value < 256) ifTrue: [ high := value ] .
+	high := value.
+
 ]
 
 { #category : #initialization }
@@ -65,8 +82,19 @@ Register >> initialize: pName [
 	high := 0.
 	low := 0.
 	complete := 0.
+	bit16 := true.
 	name := pName .
-	
+
+]
+
+{ #category : #initialization }
+Register >> initialize: pName high: highReg low: lowReg [
+	high := highReg.
+	low := lowReg.
+	complete := 0.
+	bit16 := true.
+	name := pName .
+
 ]
 
 { #category : #accessing }
@@ -77,6 +105,7 @@ Register >> low [
 { #category : #accessing }
 Register >> low: value [
 	(value < 256) ifTrue: [ low := value ] .
+
 ]
 
 { #category : #accessing }
