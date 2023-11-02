@@ -23,14 +23,16 @@ Class {
 	#instVars : [
 		'cells',
 		'mar',
-		'mbr'
+		'mbr',
+		'code'
 	],
 	#category : #AFCA
 }
 
 { #category : #initialization }
 Memory >> initialize [  
-	cells := Array new:256 .
+	cells := Array new:128.
+	code := Array new: 128.
 	mar := Register new.
 	mbr := Register new.
 	 

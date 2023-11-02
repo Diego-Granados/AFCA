@@ -96,21 +96,22 @@ ALUnit >> div [
 
 { #category : #initialization }
 ALUnit >> initialize [ 
-	b1 := Register new initialize: 'b1'.
-	b2 := Register new initialize: 'b2'.
-	b3 := Register new initialize: 'b3'.
-	b4 := Register new initialize: 'b4'.
-	
+	b1 := Subregister new initialize: 'b1'.
+	b2 := Subregister new initialize: 'b2'.
+	b3 := Subregister new initialize: 'b3'.
+	b4 := Subregister new initialize: 'b4'.
+
 ]
 
 { #category : #initialization }
 ALUnit >> initialize: busdedatos [
-	b1 := Register new.
-	b2 := Register new.
-	b3 := Register new.
-	b4 := Register new.
+	"Constructor que además recibe un bus de datos para acceder a las banderas"
+	b1 := Subregister new.
+	b2 := Subregister new.
+	b3 := Subregister new.
+	b4 := Subregister new.
 	busdatos := busdedatos .
-	
+
 ]
 
 { #category : #operating }

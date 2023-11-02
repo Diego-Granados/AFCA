@@ -54,8 +54,9 @@ DataBus >> initialize: cu [
 	controlU := cu .
 	alu := ALUnit new initialize: self.
 	flags := Flags new.
-	temporary := Register new initialize: 'bus'.
+	temporary := Subregister new initialize: 'bus'.
 	memory := Memory new.
+
 	
 ]
 

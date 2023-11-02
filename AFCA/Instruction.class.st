@@ -1,3 +1,23 @@
+"
+Public API and Key Messages
+
+- message one
+- message two
+- (for bonus points) how to create instances.
+
+   One simple example is simply gorgeous.
+
+Internal Representation and Key Implementation Points.
+
+    Instance Variables
+	cuartodato:		<Object>
+	destino:		<Object>
+	fuente:		<Object>
+	instruccion:		<Object>
+
+
+    Implementation Points
+"
 Class {
 	#name : #Instruction,
 	#superclass : #Object,
