@@ -553,6 +553,59 @@ ControlUnit >> not: operando1 [
 	self arrow: operando1 secondParameter: (busDatos temporary) . 
 ]
 
+{ #category : #'file support' }
+ControlUnit >> openFile: fileName [
+	|fileRef instructionText parts stream filecontent instructionArray| 
+	"Es importante cambiar la ubicación del archivo para poder leerlo."
+	fileRef := fileName asFileReference .
+	instructionText := '' .
+	instructionArray := OrderedCollection new.
+	(fileRef exists) ifTrue: [
+		stream := fileRef readStream . 
+		filecontent := stream contents .
+		Transcript show: filecontent.
+		1 to: filecontent size do: [:index |
+   		| character |
+    	character := filecontent at: index.
+			(character = Character cr) ifTrue: [ 
+				parts := instructionText substrings: ' '.
+				(parts size > 1) ifTrue: [  
+					parts at: 2 put:(((parts at: 2) substrings: ',') at:1).
+				].
+				(parts size = 1) ifTrue: [  
+					instructionArray add: (Instruction new initialize: (parts at:1)) .
+				].
+				(parts size = 2) ifTrue: [  
+					instructionArray add: (Instruction new initialize: (parts at:1) destino: (parts at:2)) .
+				].
+				(parts size = 3) ifTrue: [  
+					instructionArray add: (Instruction new initialize: (parts at:1) destino: (parts at:2) fuente: (parts at:3)) .
+				].
+				instructionText := '' .
+			] ifFalse: [ 
+				(character = Character lf) ifFalse: [ 
+					instructionText := instructionText, (character asString) . 
+				]. 
+			].
+		].
+		parts := instructionText substrings: ' '.
+		(parts size > 1) ifTrue: [  
+			parts at: 2 put:(((parts at: 2) substrings: ',') at:1).
+		].
+		(parts size = 1) ifTrue: [  
+			instructionArray add: (Instruction new initialize: (parts at:1)) .
+		].
+		(parts size = 2) ifTrue: [  
+			instructionArray add: (Instruction new initialize: (parts at:1) destino: (parts at:2)) .
+		].
+		(parts size = 3) ifTrue: [  
+			instructionArray add: (Instruction new initialize: (parts at:1) destino: (parts at:2) fuente: (parts at:3)) .
+		].
+		^ instructionArray .
+	].
+	
+]
+
 { #category : #operating }
 ControlUnit >> opmemtoreg: direccion secondParameter: operando1 operation: op [
 	self movmemtoreg: direccion secondParameter: ((busDatos alu) b1) .
