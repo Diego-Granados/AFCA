@@ -32,10 +32,14 @@ Class {
 { #category : #initialization }
 Memory >> initialize [  
 	cells := Array new:128.
+	cells withIndexDo: [:each :index |
+    cells at: index put: 0.
+	].
+
 	code := Array new: 128.
-	mar := Register new.
-	mbr := Register new.
-	 
+	mar := Subregister new.
+	mbr := Subregister new.
+
 ]
 
 { #category : #accessing }
@@ -61,6 +65,23 @@ Memory >> read [
 	|index|
 	index := mar complete .
 	mbr complete: (cells at: index) .
+]
+
+{ #category : #reading }
+Memory >> readCode [
+	|index|
+	index := mar complete .
+	mbr instruction: (code at: index) 
+
+]
+
+{ #category : #writing }
+Memory >> writeCode [
+	| index value |
+	value := mbr instruction.
+	index := mar complete .
+	code at: index put: value .
+
 ]
 
 { #category : #writing }

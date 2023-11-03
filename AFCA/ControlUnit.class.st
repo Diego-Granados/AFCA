@@ -148,7 +148,9 @@ Class {
 		'signvalue',
 		'zerovalue',
 		'interruptvalue',
-		'openFileButton'
+		'openFileButton',
+		'CodeSegButton',
+		'DataSegButton'
 	],
 	#category : #AFCA
 }
@@ -228,6 +230,15 @@ ControlUnit >> arrow: destino secondParameter: fuente [
 
 ]
 
+{ #category : #microinstructions }
+ControlUnit >> arrowInstruction: destino secondParameter: fuente [
+	"Microinstrucción de <- para mover datos de registro X a registro Y."
+	(fuente isMemberOf: Instruction)
+	ifTrue: [destino instruction: fuente]
+	ifFalse: [destino instruction: (fuente instruction)].
+
+]
+
 { #category : #accessing }
 ControlUnit >> ax [
 ^ax
@@ -242,6 +253,12 @@ ControlUnit >> bh [
 { #category : #accessing }
 ControlUnit >> bl [
 	^bl
+
+]
+
+{ #category : #accessing }
+ControlUnit >> busDatos [
+	^busDatos
 
 ]
 
@@ -485,6 +502,20 @@ ControlUnit >> creategui [
 	openFileButton on: #click send: #infile to: self.
 	openFileButton openInWorld.
 	openFileButton position: (openFileButton position + (40@600)).
+	
+	CodeSegButton := SimpleButtonMorph new.
+	CodeSegButton label: 'Ver código' .
+	CodeSegButton on: #click send: #outcode to: self.
+	CodeSegButton openInWorld.
+	CodeSegButton position: (CodeSegButton position + (570@460)).
+	
+	DataSegButton := SimpleButtonMorph new.
+	DataSegButton label: 'Ver datos' .
+	DataSegButton on: #click send: #outdata to: self.
+	DataSegButton openInWorld.
+	DataSegButton position: (DataSegButton position + (570@490)).
+	memorygui addMorph: CodeSegButton .
+	memorygui addMorph: DataSegButton  .
 ]
 
 { #category : #accessing }
@@ -524,17 +555,28 @@ ControlUnit >> dx [
 
 { #category : #'file support' }
 ControlUnit >> infile [
-	|gui answer instructions|
-	gui := UIManager default.
-	answer := gui request: '¿Cuál es el nombre del archivo?' initialAnswer: 'program.asm' .
-	answer ifNotNil: [ 
-		instructions := self openFile: answer.
-		instructions ifNotNil: [ 
-			
-		]					
-	] .
-	
 
+	| gui answer instructions |
+	gui := UIManager default.
+	answer := gui
+		          request: '¿Cuál es el nombre del archivo?'
+		          initialAnswer: 'program.asm'.
+	( answer = '' or: answer isNil )
+		ifFalse: [
+			instructions := self openFile: answer.
+			instructions ifNotNil: [
+				| lastInstruction |
+				1 to: instructions size do: [ :index |
+					| instruction |
+					instruction := instructions at: index.
+					self movinstructiontomem: instruction to: index ].
+				lastInstruction := Instruction new initialize: 'stop'.
+				self
+					movinstructiontomem: lastInstruction
+					to: instructions size + 1.
+				UIManager default inform: 'Archivo escrito en memoria.' ] ]
+		ifTrue: [
+		UIManager default inform: 'El nombre no puede estar vacío.' ]
 ]
 
 { #category : #initialization }
@@ -590,6 +632,16 @@ ControlUnit >> movimtoreg: immediate secondParameter: register [
 	"Simula la instruccion de mov de un inmediato a un registro"
 	register complete: immediate .
 	self updateRegister: register .
+
+]
+
+{ #category : #moving }
+ControlUnit >> movinstructiontomem: instruction to: direccion [
+	"Simula mueve una instrucción a una posición en memoria"
+	self arrowInstruction: (busDatos temporary) secondParameter: instruction . 
+	self arrowInstruction: ((busDatos memory) mbr) secondParameter: (busDatos temporary) . "se mueve la direccion al mbr"
+	self movimtoreg: direccion secondParameter: ((busDatos memory) mar) . "se mueve la direccion al mar" 
+	(busDatos memory) writeCode .
 
 ]
 
@@ -705,7 +757,7 @@ ControlUnit >> openFile: fileName [
 		].
 		^ instructionArray .
 	] ifFalse: [UIManager default inform: 'Ese archivo no existe'.].
-	
+
 ]
 
 { #category : #operating }
@@ -860,6 +912,39 @@ ControlUnit >> or: operando1 secondParameter: operando2 [
 	(busDatos alu) or .
 	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
 	self arrow: operando1 secondParameter: (busDatos temporary) . 
+]
+
+{ #category : #accessing }
+ControlUnit >> outcode [
+	
+]
+
+{ #category : #accessing }
+ControlUnit >> outdata [
+	| message window textMorph scrollbar pasteup|
+	message := ''.
+	1 to: 128 do: [:index |
+    	self movmemtoreg: index secondParameter: (self dx) .
+		message := message, '        ',(index asString), ': ', (dx complete asString),  ',' , (Character cr asString), (Character lf asString).
+		].
+	window := SystemWindow new.
+	window setLabel: 'Datos en la memoria'.
+	textMorph := TextMorph new.
+	textMorph contents: message.
+	textMorph setProperty: #wrap toValue: true.
+	
+	scrollbar := ScrollPane new.
+	window addMorph: scrollbar.
+	window addMorph: textMorph frame: (0 @ 0 extent: 1 @ 1).
+	pasteup := PasteUpMorph new.
+	pasteup := PasteUpMorph new.
+	pasteup extent: 1000@2500.
+	pasteup addMorph: textMorph .
+	scrollbar scroller addMorph: pasteup.
+	window addMorph: scrollbar frame: (0@0 corner: 1@1).
+window openInWorld.
+
+
 ]
 
 { #category : #operating }

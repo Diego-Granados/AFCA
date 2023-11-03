@@ -61,6 +61,12 @@ DataBus >> initialize: cu [
 ]
 
 { #category : #accessing }
+DataBus >> memory [
+	^ memory
+
+]
+
+{ #category : #accessing }
 DataBus >> temporary [
 	^temporary .
 ]
@@ -68,4 +74,10 @@ DataBus >> temporary [
 { #category : #accessing }
 DataBus >> temporary: value [
 	temporary complete: value . 
+]
+
+{ #category : #accessing }
+DataBus >> temporaryInstruction: value [
+	temporary instruction: value . 
+
 ]

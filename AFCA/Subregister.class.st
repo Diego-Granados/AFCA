@@ -1,6 +1,9 @@
 Class {
 	#name : #Subregister,
 	#superclass : #Register,
+	#instVars : [
+		'instruction'
+	],
 	#category : #AFCA
 }
 
@@ -21,5 +24,17 @@ Subregister >> initialize: pName [
 	complete := 0.
 	bit16 := false.
 	name := pName .
+
+]
+
+{ #category : #accessing }
+Subregister >> instruction [
+	^ instruction
+
+]
+
+{ #category : #accessing }
+Subregister >> instruction: pInstruction [
+	instruction := pInstruction
 
 ]
