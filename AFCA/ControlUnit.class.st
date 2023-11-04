@@ -150,10 +150,92 @@ Class {
 		'interruptvalue',
 		'openFileButton',
 		'CodeSegButton',
-		'DataSegButton'
+		'DataSegButton',
+		'registerDictionary',
+		'mbrinstruction',
+		'businstruction',
+		'runProgramButton',
+		'closeButton'
+	],
+	#classVars : [
+		'ArithmeticStrings',
+		'InstructionMethods',
+		'OperandDecodes',
+		'OperandStrings'
 	],
 	#category : #AFCA
 }
+
+{ #category : #'class initialization' }
+ControlUnit class >> initialize [
+
+	"Se crea el diccionario que relaciona los códigos con las variables internas del CU"
+	OperandDecodes := Dictionary new.
+	OperandDecodes at: 0 put: 'ax';
+		at: 1 put: 'bx';
+		at: 2 put: 'cx';
+		at: 3 put: 'dx';
+		at: 4 put: 'al';
+		at: 5 put: 'ah';
+		at: 6 put: 'bl';
+		at: 7 put: 'bh';
+		at: 8 put: 'cl';
+		at: 9 put: 'ch';
+		at: 10 put: 'dl';
+		at: 11 put: 'dh';
+		at: 12 put: '[dir]';
+		at: 13 put: '[bx]';
+		at: 14 put: '[bl]';
+		at: 15 put: '[bh]';
+		at: 16 put: 'inm'.
+	
+	OperandStrings := Dictionary new.
+	OperandStrings at: 0 put: 'reg';
+		at: 1 put: 'reg';
+		at: 2 put: 'reg';
+		at: 3 put: 'reg';
+		at: 4 put: 'reg';
+		at: 5 put: 'reg';
+		at: 6 put: 'reg';
+		at: 7 put: 'reg';
+		at: 8 put: 'reg';
+		at: 9 put: 'reg';
+		at: 10 put: 'reg';
+		at: 11 put: 'reg';
+		at: 12 put: 'mem';
+		at: 13 put: 'mem';
+		at: 14 put: 'mem';
+		at: 15 put: 'mem';
+		at: 16 put: 'im'.
+
+
+	"Se inicializa el diccionario que va a contener el mappeo de los métodos a ejecutar de acuerdo con los operandos"
+	InstructionMethods :=	Dictionary new.
+	"Mov"
+	InstructionMethods at: 0 put: 'mov';
+		at: 8 put: 'op';
+		at: 9 put: 'op';
+		at: 10 put: 'op';
+		at: 11 put: 'op';
+		at: 12 put: 'op';
+		at: 13 put: 'op';
+		at: 14 put: 'op';
+		at: 15 put: 'op';
+		at: 16 put: 'op'.
+		
+	"Se inicializa el diccionario que va a contener el mappeo de la operación a ejecutar en los métodos aritméticos"
+	ArithmeticStrings := Dictionary new.
+	ArithmeticStrings
+		at: 8 put: 'add';
+		at: 9 put: 'sub';
+		at: 10 put: 'mul';
+		at: 11 put: 'div';
+		at: 12 put: 'and';
+		at: 13 put: 'or';
+		at: 14 put: 'not';
+		at: 15 put: 'shl';
+		at: 16 put: 'shr'.
+]
 
 { #category : #operating }
 ControlUnit >> addmemtoreg: direccion secondParameter: operando1 [
@@ -226,7 +308,9 @@ ControlUnit >> and: operando1 secondParameter: operando2 [
 { #category : #accessing }
 ControlUnit >> arrow: destino secondParameter: fuente [
 	"Microinstrucción de <- para mover datos de registro X a registro Y."
-	destino complete: (fuente complete) . 
+	(fuente isKindOf: Register)
+	ifTrue: [destino complete: (fuente complete)]
+	ifFalse: [destino complete: fuente].
 
 ]
 
@@ -276,6 +360,23 @@ ControlUnit >> ch [
 { #category : #accessing }
 ControlUnit >> cl [
 	^cl
+
+]
+
+{ #category : #'initialize-release' }
+ControlUnit >> close [
+World submorphs select: [ :m | 
+    m class = Morph and: [ 
+    m isLocked not ] ] 
+thenDo: [ :m | m delete ].
+World submorphs select: [ :m | 
+    m class = SimpleButtonMorph and: [ 
+    m isLocked not ] ] 
+thenDo: [ :m | m delete ].
+World submorphs select: [ :m | 
+    m class = TextMorph and: [ 
+    m isLocked not ] ] 
+thenDo: [ :m | m delete ].
 
 ]
 
@@ -361,6 +462,9 @@ ControlUnit >> creategui [
 	cxvalue := TextMorph new contents: ''.
 	dxvalue := TextMorph new contents: ''.
 	
+	mbrinstruction := TextMorph new contents: ''.
+	businstruction := TextMorph new contents: ''.
+	
 	cugui addMorph: cutext .
 	irgui addMorph: irtext .
 	pcgui addMorph: pctext .
@@ -405,6 +509,8 @@ ControlUnit >> creategui [
 	zerogui addMorph: zerovalue.
 	interruptgui addMorph: interrupttext.
 	interruptgui addMorph: interruptvalue.
+	mbrgui addMorph: mbrinstruction.
+	busgui addMorph: businstruction.
 
 	cugui openInWorld .
 	irgui openInWorld .
@@ -428,6 +534,8 @@ ControlUnit >> creategui [
 	mbrgui openInWorld .
 	margui openInWorld .
 	memorygui openInWorld .
+	mbrinstruction openInWorld.
+	businstruction openInWorld.
 	cugui position: (cugui position + (40@40)).
 	irgui position: (irgui position + (40@180)).
 	pcgui position: (pcgui position + (40@260)).
@@ -472,6 +580,10 @@ ControlUnit >> creategui [
 	mbrvalue position: (mbrtext position + (0@12)).
 	marvalue position: (martext position + (0@12)).
 	memoryvalue position: (memorytext position + (0@12)).
+	memoryvalue position: (memorytext position + (0@12)).
+	memoryvalue position: (memorytext position + (0@12)).
+	mbrinstruction position: (mbrvalue position + (0@12)).
+	businstruction position: (busvalue position + (0@12)).
 	
 	cugui extent: 100@100.
 	irgui extent:110@50.
@@ -516,6 +628,19 @@ ControlUnit >> creategui [
 	DataSegButton position: (DataSegButton position + (570@490)).
 	memorygui addMorph: CodeSegButton .
 	memorygui addMorph: DataSegButton  .
+	
+	runProgramButton := SimpleButtonMorph new.
+	runProgramButton label: 'Ejecutar programa' .
+	runProgramButton on: #click send: #executeProgram to: self.
+	runProgramButton openInWorld.
+	runProgramButton position: (runProgramButton position + (100@600)).
+	
+	closeButton := SimpleButtonMorph new.
+	closeButton label: 'Cerrar AFCA' .
+	closeButton on: #click send: #close to: self.
+	closeButton openInWorld.
+	closeButton position: (closeButton position + (100@600)).
+
 ]
 
 { #category : #accessing }
@@ -551,6 +676,81 @@ ControlUnit >> dl [
 { #category : #accessing }
 ControlUnit >> dx [
 ^dx
+]
+
+{ #category : #initialization }
+ControlUnit >> executeProgram [
+	| memory finish |
+	memory := busDatos memory.
+	programCounter complete: 1.
+	self updateRegister: 'pc' secondParameter: (programCounter complete).
+	
+	finish := false.
+	
+	"Ciclo de fetch"
+	[finish] whileFalse: [
+		| instruction instructionStr operand1 operand2 operand1Var operand2Var operand1Str operand2Str operand3Str methodStr |
+		self arrow: (busDatos temporary) secondParameter: (programCounter complete).
+		self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
+		self arrow: (memory mar) secondParameter: (busDatos temporary) . 
+		self updateRegister: 'mar' secondParameter: ((memory mar) complete) .
+		memory readCode.
+		((memory mbr instruction instruccion) = 255) ifTrue: [finish  := true.
+			UIManager default inform: 'Fin de ejecución.'.]
+		ifFalse: [
+		self updateRegister: 'mbr' secondParameter: ((memory mbr) instruction) .
+		self arrowInstruction: (busDatos temporary) secondParameter: (memory mbr).
+		self updateRegister: 'bus' secondParameter: ((busDatos temporary) instruction) .
+		self arrowInstruction: instructionRegister secondParameter: (busDatos temporary).
+		self updateRegister: 'ir' secondParameter: (instructionRegister instruction).
+		instruction := instructionRegister instruction.
+		instructionStr := InstructionMethods at: (instruction instruccion).
+		(instruction fuente) ifNotNil: [ 
+		operand1Var := OperandDecodes at: (instruction fuente).
+		operand1Var := self transformOperand: operand1Var data: (instruction cuartodato).
+		(operand1Var isKindOf: Integer) ifFalse: [operand1 := (registerDictionary at: operand1Var)] ifTrue: [operand1 := operand1Var].
+		operand1Str := OperandStrings at: (instruction fuente).].
+		(instruction destino) ifNotNil: [ 
+		operand2Var := OperandDecodes at: (instruction destino).
+		operand2Var := self transformOperand: operand2Var data: (instruction cuartodato).
+		(operand2Var isKindOf: Integer) ifFalse: [operand2 := (registerDictionary at: operand2Var)] ifTrue: [operand2 := operand2Var].
+		operand2Str := OperandStrings at: (instruction destino).].
+	
+		(instruction destino)
+			"No tiene operandos"
+			ifNil: [methodStr := instructionStr.
+					self perform: methodStr asSymbol .]
+			ifNotNil: [
+				(instruction fuente)
+					"Tiene 1 solo operando"
+					ifNil: [methodStr := instructionStr,operand1Str,':'.
+							self perform: methodStr asSymbol with: operand1
+							]
+					ifNotNil:[
+						"Tiene 2 operandos"
+						methodStr := instructionStr,operand1Str,'to',operand2Str,':secondParameter:'.
+						"Si es una operación aritmética, hay que ver cuál es"
+						(instructionStr = 'op')
+							ifTrue: [ operand3Str := ArithmeticStrings at: (instruction instruccion).
+								methodStr := methodStr,'operation:'.
+								self perform: methodStr asSymbol with: operand1 with: operand2 with: operand3Str.
+							]
+							ifFalse: [self perform: methodStr asSymbol with: operand1 with: operand2.].
+						].
+			"Ejecuta la instruccion decodificada"
+			"compiler evaluate: methodStr for: self."
+			
+			"Subciclo de interrupcion"
+			(busDatos flags interrupt isZero) ifFalse: [
+				UIManager default inform: 'Se está atendiendo una interrupción'.
+				busDatos flags cli.
+				]. 
+			"Incrementa el PC"
+			self opimtoreg: 1 secondParameter: programCounter operation: 'add'.
+			].
+		].
+	].
+
 ]
 
 { #category : #'file support' }
@@ -598,8 +798,22 @@ ControlUnit >> initialize [
 	dl := Subregister new initialize: 'dl'.
 	dx := Register new initialize: 'dx' high: dh low: dl.
 
+registerDictionary := Dictionary new.
+registerDictionary
+    at: 'ax' put: ax;
+    at: 'al' put: al;
+    at: 'ah' put: ah;
+    at: 'bx' put: bx;
+    at: 'bh' put: bh;
+    at: 'bl' put: bl;
+    at: 'cx' put: cx;
+    at: 'ch' put: ch;
+    at: 'cl' put: cl;
+    at: 'dx' put: dx;
+    at: 'dh' put: dh;
+    at: 'dl' put: dl.
+
 	self creategui .
-	
 ]
 
 { #category : #accessing }
@@ -761,6 +975,50 @@ ControlUnit >> openFile: fileName [
 ]
 
 { #category : #operating }
+ControlUnit >> opimtoreg: immediate secondParameter: operando1 operation: op [
+	"Este método realiza operaciones de la unidad de ALU y actualiza registros según la operación especificada."
+	"Lo hace con un el valor en un inmediato a un registro"
+	self arrow: (busDatos temporary) secondParameter: operando1 . 
+	self updateRegister: 'bus' secondParameter: (operando1 complete) .
+	self arrow: ((busDatos alu) b1) secondParameter: (busDatos temporary) . 
+	self updateRegister: 'b1' secondParameter: (((busDatos alu) b1) complete) .
+	self arrow: (busDatos temporary) secondParameter: immediate . 
+	self updateRegister: 'bus' secondParameter: immediate .
+	self arrow: ((busDatos alu) b2) secondParameter: (busDatos temporary) . 
+	self updateRegister: 'b2' secondParameter: (((busDatos alu) b2) complete) .
+	(op = 'add') ifTrue: [ 
+	(busDatos alu) add . ].
+	((op = 'sub') or: (op = 'cmp')) ifTrue: [ 
+	(busDatos alu) sub . ].
+	(op = 'mul') ifTrue: [ 
+	(busDatos alu) mul . ].
+	(op = 'div') ifTrue: [ 
+	(busDatos alu) div . 
+	self updateRegister: 'b4' secondParameter: (((busDatos alu) b4) complete) .
+	].
+	(op = 'and') ifTrue: [ 
+	(busDatos alu) and . ].
+	(op = 'or') ifTrue: [ 
+	(busDatos alu) or . ].
+	(op = 'xor') ifTrue: [ 
+	(busDatos alu) xor . ].
+	(op = 'shl') ifTrue: [ 
+	(busDatos alu) shl . ].
+	(op = 'shr') ifTrue: [ 
+	(busDatos alu) shl . ].
+	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
+	self updateRegister: 'carry' secondParameter: ((busDatos flags) carry) .
+	self updateRegister: 'sign' secondParameter: ((busDatos flags) sign) .
+	self updateRegister: 'zero' secondParameter: ((busDatos flags) zero) .
+	(op = 'cmp') ifFalse: [
+	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
+	self arrow: operando1 secondParameter: (busDatos temporary) . 
+	self updateRegister: operando1 . ].
+
+]
+
+{ #category : #operating }
 ControlUnit >> opmemtoreg: operando1 secondParameter: direccion operation: op [
 	"Este método realiza operaciones de la unidad de ALU y actualiza registros según la operación especificada."
 	"Lo hace con un el valor en un registro a otro en memoria"
@@ -916,7 +1174,38 @@ ControlUnit >> or: operando1 secondParameter: operando2 [
 
 { #category : #accessing }
 ControlUnit >> outcode [
+	| message window textMorph scrollbar pasteup|
+	message := ''.
+	1 to: 128 do: [:index |
+		| instruction |
+		self arrow: (busDatos temporary) secondParameter: index.
+      self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
+      self arrow: ((busDatos memory) mar) secondParameter: (busDatos temporary) . 
+      self updateRegister: 'mar' secondParameter: (((busDatos memory) mar) complete) .
+      (busDatos memory) readCode.
+		
+		self arrowInstruction: (busDatos temporary)  secondParameter: ((busDatos memory) mbr).
+		mbrinstruction contents: ((((busDatos memory) mbr) instruction) asString ) .
+		businstruction contents: (((busDatos temporary) instruction) asString ) .
+    	instruction := (busDatos temporary) instruction.
+		message := message, '        ',(index asString), ': ', (instruction asString),  ',' , (Character cr asString), (Character lf asString).
+		].
+	window := SystemWindow new.
+	window setLabel: 'Código en la memoria'.
+	textMorph := TextMorph new.
+	textMorph contents: message.
+	textMorph setProperty: #wrap toValue: true.
 	
+	scrollbar := ScrollPane new.
+	window addMorph: scrollbar.
+	window addMorph: textMorph frame: (0 @ 0 extent: 1 @ 1).
+	pasteup := PasteUpMorph new.
+	pasteup := PasteUpMorph new.
+	pasteup extent: 1000@2500.
+	pasteup addMorph: textMorph .
+	scrollbar scroller addMorph: pasteup.
+	window addMorph: scrollbar frame: (0@0 corner: 1@1).
+	window openInWorld.
 ]
 
 { #category : #accessing }
@@ -1004,6 +1293,23 @@ ControlUnit >> test: flag secondParameter: n [
 	]. 
 	^false
 	
+]
+
+{ #category : #operating }
+ControlUnit >> transformOperand: operand data: dato [
+	| result |
+	(operand = 'inm')
+			ifTrue: [result := dato]
+			ifFalse: [
+				((operand first) = '[')
+					ifTrue: [((operand second) = 'b')
+						ifTrue: [result := (operand allButFirst allButLast)]
+						ifFalse: [result := dato]
+						]
+					ifFalse: [result := operand].
+				].
+	^ result.
+
 ]
 
 { #category : #gui }

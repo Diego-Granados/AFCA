@@ -78,6 +78,25 @@ Instruction class >> initialize [
 		at: 'stop' put: 255.
 ]
 
+{ #category : #converting }
+Instruction >> asString [
+	| string |
+	string := '' .
+	instruccion ifNotNil: [ 
+		string := string, (instruccion asString)
+		 ] .
+	destino ifNotNil: [ 
+		string := string, (destino asString)
+		 ] .
+	fuente ifNotNil: [ 
+		string := string, (fuente asString)
+		 ] .
+	cuartodato ifNotNil: [ 
+		string := string, (cuartodato asString)
+		 ] .
+	^string.
+]
+
 { #category : #accessing }
 Instruction >> cuartodato [
 ^cuartodato
