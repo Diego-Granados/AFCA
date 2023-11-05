@@ -1680,21 +1680,21 @@ instructionRegister := Subregister new initialize: 'ir'.
 
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'file support' }
 ControlUnit >> restoreAFCA [
 	"Método para restaurar un archivo de un AFCA. Se lee del folder datos/"
-	|gui answer archivo line flags memory alu data code stream|
+	|gui answer archivo line flags memory alu data code|
 	gui := UIManager default.
 	answer := gui request: '¿Cuál es el nombre del archivo?' initialAnswer: 'afca.txt' .
 	(answer = '') ifFalse: [
-		| lineArray |
+		| lineArray stream fileArray|
 		"Reestablecemos le AFCA"
 		self resetAFCA.
 		"Abrimos el archivo"
-		answer := 'datos\',answer.
-		
-		stream := ('datos\',answer) asFileReference readStream . 
-		archivo := stream contents .
+        answer := 'datos\',answer.
+        
+        stream := answer asFileReference readStream . 
+        archivo := stream contents .
 		
 		flags := busDatos flags.
 		alu := busDatos alu.
@@ -1702,8 +1702,8 @@ ControlUnit >> restoreAFCA [
 		data := memory data.
 		code := memory code.
 		
-		
-		line := archivo nextLine.
+		fileArray := archivo findTokens: String crlf.
+		line := fileArray at:1.
 		lineArray := line substrings.
 		"Leemos y actualizamos los registros con la información del archivo"
 		ax complete: ((lineArray at: 1) asNumber).
@@ -1724,7 +1724,7 @@ ControlUnit >> restoreAFCA [
 		memory mbr complete: ((lineArray at: 16) asNumber).
 	
 		"actualiza el instructionRegister"
-		line := archivo nextLine.
+		line := fileArray at:2.
 		lineArray := line substrings.
 		
 		instructionRegister instruction: (Instruction new initializeNumber: (lineArray at: 1)
@@ -1734,13 +1734,13 @@ ControlUnit >> restoreAFCA [
 			
 		"Actualiza el segmento de datos en memoria"
 		1 to: data size do: [:index | 
-			line := archivo nextLine.
+			line := fileArray at:(index+2).
 			data at: index put: (line asNumber).
 			].
 		
 		"Actualiza el segmento de código en memoria"
 		1 to: code size do: [:index |
-			line := archivo nextLine.
+			line := fileArray at:(index + 130).
 			lineArray := line substrings.
 			(lineArray size = 1)
 			ifFalse: [code at: index put: (Instruction new
@@ -1758,7 +1758,7 @@ ControlUnit >> restoreAFCA [
 
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'file support' }
 ControlUnit >> saveAFCA [
 	|gui answer archivo content flags memory alu instruction data code|
 	gui := UIManager default.
@@ -1767,7 +1767,7 @@ ControlUnit >> saveAFCA [
 	answer := gui request: '¿Cuál es el nombre del archivo del AFCA?' initialAnswer: 'afca.txt' .
 	(answer = '') ifFalse: [
 		answer := 'datos\',answer.
-		archivo := ('datos\',answer) asFileReference writeStream.
+		archivo := answer asFileReference writeStream.
 		"Escribimos los registros en el archivo. Están separados por espacios en blanco
 		Orden:
 		ax bx cx dx programCounter b1 b2 b3 b4 busDatos carry sign zero interrupt mar mbr

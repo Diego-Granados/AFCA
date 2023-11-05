@@ -30,6 +30,15 @@ Class {
 }
 
 { #category : #accessing }
+Memory >> MEM: op [
+	"Microinstrucción de MEM"
+	(op = 0) ifTrue: [self read].
+	(op = 1) ifTrue: [self overwrite].
+
+
+]
+
+{ #category : #accessing }
 Memory >> code [
 ^code
 ]

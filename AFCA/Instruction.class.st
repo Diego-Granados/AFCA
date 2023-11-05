@@ -216,6 +216,27 @@ destino := ((pDestino first) = $[)
 ]
 
 { #category : #initialization }
+Instruction >> initializeNumber: pInstruccion [
+	instruccion := pInstruccion.
+
+]
+
+{ #category : #initialization }
+Instruction >> initializeNumber: pInstruccion destino: pDestino [
+	instruccion := pInstruccion.
+	destino := pDestino.
+
+]
+
+{ #category : #initialization }
+Instruction >> initializeNumber: pInstruccion destino: pDestino fuente: pFuente [
+	instruccion := pInstruccion.
+	destino := pDestino.
+	fuente := pFuente.
+
+]
+
+{ #category : #initialization }
 Instruction >> initializeNumber: pInstruccion destino: pDestino fuente: pFuente dato: pDato [
 	instruccion := (pInstruccion asNumber).
 	(pDestino = 'nil') ifFalse: [destino := (pDestino asNumber).].

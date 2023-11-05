@@ -33,6 +33,32 @@ Class {
 }
 
 { #category : #operating }
+ALUnit >> ALU: op [
+	"Microinstrucción con sus códigos de operación"
+	(op = 8) ifTrue: [ 
+	self add . ].
+	((op = 9) or: (op = 'cmp')) ifTrue: [ 
+	self sub . ].
+	(op = 10) ifTrue: [ 
+	self mul . ].
+	(op = 11) ifTrue: [ 
+	self div . 
+	self updateRegister: 'b4' secondParameter: (b4 complete) .
+	].
+	(op = 12) ifTrue: [ 
+	self and . ].
+	(op = 13) ifTrue: [ 
+	self or . ].
+	(op = 14) ifTrue: [ 
+	self xor . ].
+	(op = 15) ifTrue: [ 
+	self shl . ].
+	(op = 16) ifTrue: [ 
+	self shr . ].
+
+]
+
+{ #category : #operating }
 ALUnit >> add [
 	|value number1 number2 digit1 digit2|
 	(busdatos flags) clc .
