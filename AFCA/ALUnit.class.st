@@ -37,13 +37,12 @@ ALUnit >> ALU: op [
 	"Microinstrucción con sus códigos de operación"
 	(op = 8) ifTrue: [ 
 	self add . ].
-	((op = 9) or: (op = 'cmp')) ifTrue: [ 
+	((op = 9)) ifTrue: [ 
 	self sub . ].
 	(op = 10) ifTrue: [ 
 	self mul . ].
 	(op = 11) ifTrue: [ 
 	self div . 
-	self updateRegister: 'b4' secondParameter: (b4 complete) .
 	].
 	(op = 12) ifTrue: [ 
 	self and . ].
@@ -118,6 +117,29 @@ ALUnit >> div [
 	(value = 0) ifTrue: [ (busdatos flags) stz ] .
 	b3 complete: value .
 	b4 complete: ((b1 complete) \\ (b2 complete)) .
+]
+
+{ #category : #operating }
+ALUnit >> incPC [
+	"Microinstruccion para la suma del ALU"
+	|value number1 number2 digit1 digit2|
+	number1 := b1 complete .
+	number2 := b2 complete .
+	[(number1 > 0) and: (number2 > 0)] whileTrue: [
+    digit1 := number1 \\ 10.
+    digit2 := number2 \\ 10.
+    ((digit1 + digit2) > 9) ifTrue: [
+			number1 := 0.
+        number2 := 0.
+    ] ifFalse: [
+        number1 := number1 // 10.
+        number2 := number2 // 10.
+    ].
+	].
+	value := ((b1 complete) + (b2 complete)) .
+
+	b3 complete: value .
+
 ]
 
 { #category : #initialization }

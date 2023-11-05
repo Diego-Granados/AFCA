@@ -149,8 +149,8 @@ Class {
 		'zerovalue',
 		'interruptvalue',
 		'openFileButton',
-		'CodeSegButton',
-		'DataSegButton',
+		'codeSegButton',
+		'dataSegButton',
 		'registerDictionary',
 		'mbrinstruction',
 		'businstruction',
@@ -165,15 +165,16 @@ Class {
 		'stepInstructionButton',
 		'resetButton',
 		'inregButton',
-		'stiButton'
+		'stiButton',
+		'restoreButton',
+		'saveButton',
+		'outregButton'
 	],
 	#classVars : [
 		'ArithmeticStrings',
 		'InstructionMethods',
 		'OperandDecodes',
-		'OperandStrings',
-		'restoreButton',
-		'saveButton'
+		'OperandStrings'
 	],
 	#category : #AFCA
 }
@@ -225,15 +226,30 @@ ControlUnit class >> initialize [
 	InstructionMethods :=	Dictionary new.
 	"Mov"
 	InstructionMethods at: 0 put: 'mov';
-		at: 8 put: 'op';
-		at: 9 put: 'op';
-		at: 10 put: 'op';
-		at: 11 put: 'op';
-		at: 12 put: 'op';
-		at: 13 put: 'op';
-		at: 14 put: 'op';
-		at: 15 put: 'op';
-		at: 16 put: 'op'.
+		at: 1 put: 'out';
+		at: 2 put: 'in';
+		at: 3 put: 'jmp';
+		at: 4 put: 'jz';
+		at: 5 put: 'op'; "cmp"
+		at: 6 put: 'cli';
+		at: 7 put: 'sti';
+		at: 8 put: 'op'; "add"
+		at: 9 put: 'op'; "sub"
+		at: 10 put: 'op'; "mul"
+		at: 11 put: 'op'; "div"
+		at: 12 put: 'op'; "and"
+		at: 13 put: 'op'; "or"
+		at: 14 put: 'op'; "xor"
+		at: 15 put: 'op'; "shl"
+		at: 16 put: 'op'; "shr"
+		at: 17 put: 'stc';
+		at: 18 put: 'stz';
+		at: 19 put: 'sts';
+		at: 20 put: 'clc';
+		at: 21 put: 'clz';
+		at: 22 put: 'cls';
+		at: 255 put: 'stop'.
+
 		
 	"Se inicializa el diccionario que va a contener el mappeo de la operación a ejecutar en los métodos aritméticos"
 	ArithmeticStrings := Dictionary new.
@@ -247,6 +263,38 @@ ControlUnit class >> initialize [
 		at: 14 put: 'not';
 		at: 15 put: 'shl';
 		at: 16 put: 'shr'.
+]
+
+{ #category : #microinstructions }
+ControlUnit >> TEST: flag [
+	"Microinstrucción que retorna true o false dependiendo de si una bandera está prendida"
+	"Codificación de flags:
+	carry = 0
+	sign = 1
+	zero = 2
+	interrupt = 3" 
+	(flag = 0) ifTrue:[
+			((busDatos flags) carry isZero) ifFalse: [ 
+					^true
+				 ]
+	]. 
+	(flag = 1) ifTrue:[
+			((busDatos flags) sign isZero) ifFalse: [ 
+					^true
+				 ]
+	]. 
+	(flag = 2) ifTrue:[
+			((busDatos flags) zero isZero) ifFalse: [ 
+					^true
+				 ]
+	]. 
+	(flag = 3) ifTrue:[
+			((busDatos flags) interrupt isZero) ifFalse: [ 
+					^true
+				 ]
+	]. 
+	^false
+
 ]
 
 { #category : #operating }
@@ -661,19 +709,19 @@ ControlUnit >> creategui [
 	openFileButton openInWorld.
 	openFileButton position: (openFileButton position + (40@400)).
 	
-	CodeSegButton := SimpleButtonMorph new.
-	CodeSegButton label: 'Ver código' .
-	CodeSegButton on: #click send: #displaycode to: self.
-	CodeSegButton openInWorld.
-	CodeSegButton position: (CodeSegButton position + (570@460)).
+	codeSegButton := SimpleButtonMorph new.
+	codeSegButton label: 'Ver código' .
+	codeSegButton on: #click send: #displaycode to: self.
+	codeSegButton openInWorld.
+	codeSegButton position: (codeSegButton position + (570@460)).
 	
-	DataSegButton := SimpleButtonMorph new.
-	DataSegButton label: 'Ver datos' .
-	DataSegButton on: #click send: #displaydata to: self.
-	DataSegButton openInWorld.
-	DataSegButton position: (DataSegButton position + (570@490)).
-	memorygui addMorph: CodeSegButton .
-	memorygui addMorph: DataSegButton  .
+	dataSegButton := SimpleButtonMorph new.
+	dataSegButton label: 'Ver datos' .
+	dataSegButton on: #click send: #displaydata to: self.
+	dataSegButton openInWorld.
+	dataSegButton position: (dataSegButton position + (570@490)).
+	memorygui addMorph: codeSegButton .
+	memorygui addMorph: dataSegButton  .
 	
 	runProgramButton := SimpleButtonMorph new.
 	runProgramButton label: 'Ejecutar programa' .
@@ -748,6 +796,13 @@ ControlUnit >> creategui [
 	stiButton color: (Color r: 1.0 g: 0.5 b: 0).
 	stiButton openInWorld.
 	stiButton position: (restoreButton position + (0@50)).
+	
+	outregButton := SimpleButtonMorph new.
+	outregButton label: 'Desplegar contenido de un registro'.
+	outregButton on: #click send: #outreg to: self.
+	outregButton color: (Color r: 0 g: 0.9 b: 0.9).
+	outregButton openInWorld.
+	outregButton position: (inregButton position + (0@30)).
 
 ]
 
@@ -793,6 +848,7 @@ ControlUnit >> displayStepWindow [
 	myWindow addMorph: stepButton.
 	myWindow addMorph: viewCodeButton .
 	myWindow addMorph: viewDataButton  .
+	myWindow position: 1000@200.
 
 ]
 
@@ -823,6 +879,7 @@ ControlUnit >> displaycode [
 	scrollbar scroller addMorph: pasteup.
 	window addMorph: scrollbar frame: (0@0 corner: 1@1).
 	window openInWorld.
+	window position: 1000@200.
 
 ]
 
@@ -851,6 +908,7 @@ ControlUnit >> displaydata [
 	scrollbar scroller addMorph: pasteup.
 	window addMorph: scrollbar frame: (0@0 corner: 1@1).
 window openInWorld.
+window position: 1000@200.
 
 ]
 
@@ -861,9 +919,9 @@ ControlUnit >> displaydatapart: position [
 	data := memory data.
 	message := ''.
 	start := position  - 12.
-	start < 0 ifTrue: [start := 0].
+	start < 1 ifTrue: [start := 1].
 	end := start + 24.
-	end > (memory size) ifTrue: [end := (memory size)].
+	end > (data size) ifTrue: [end := (data size)].
 	start to: end do: [:index |
 		message := message, '        ',(index asString), ': ', ((data at: index) asString),  ',' , (Character cr asString), (Character lf asString).
 		].
@@ -878,11 +936,13 @@ ControlUnit >> displaydatapart: position [
 	dataWindow addMorph: textMorph frame: (0 @ 0 extent: 1 @ 1).
 	pasteup := PasteUpMorph new.
 	pasteup := PasteUpMorph new.
-	pasteup extent: 1000@3500.
+	pasteup extent: 300@3500.
 	pasteup addMorph: textMorph .
 	scrollbar scroller addMorph: pasteup.
 	dataWindow addMorph: scrollbar frame: (0@0 corner: 1@1).
-dataWindow openInWorld.
+	dataWindow openInWorld.
+	dataWindow position: 1000@200.
+
 
 ]
 
@@ -1177,9 +1237,54 @@ instructionRegister := register
 ]
 
 { #category : #jumping }
+ControlUnit >> jmpim: direccion [
+	"Instrucción para el jmp a dirección de código"
+	"Movemos dirección al b1 porque hay que restarle 1 para que el program counter quede apuntando a la dirección correcta después del incremento en el ciclo de fetch."
+	self arrow: (busDatos temporary) secondParameter: direccion.
+	self updateRegister: 'bus' secondParameter: direccion.
+	self arrow: (busDatos alu b1) secondParameter: (busDatos temporary).
+	self updateRegister: 'b1' secondParameter: direccion.
+	self arrow:  (busDatos temporary) secondParameter: 1.
+	self updateRegister: 'bus' secondParameter: 1.
+	self arrow: (busDatos alu b2) secondParameter: (busDatos temporary).
+	self updateRegister: 'b2' secondParameter: (busDatos temporary complete).
+	(busDatos alu) ALU: 9. "Realiza la resta"
+	"Movemos el resultado de la resta al PC."
+	self arrow: (busDatos temporary) secondParameter: (busDatos alu b3).
+	self updateRegister: 'bus' secondParameter: (busDatos temporary complete).
+	self arrow: programCounter secondParameter: (busDatos temporary) .
+	self updateRegister: programCounter .
+
+]
+
+{ #category : #jumping }
 ControlUnit >> jmpreg: register [
 	self movregtoreg: register secondParameter: ((busDatos memory) mar) .
 	
+]
+
+{ #category : #jumping }
+ControlUnit >> jzim: direccion [
+	"Instrucción para el jump si el zero flag está encendido"
+	"TEST: 2 corresponde al Zero flag"
+	(self TEST: 2) ifTrue: [
+		"Movemos dirección al b1 porque hay que restarle 1 para que el program counter quede apuntando a la dirección correcta después del incremento en el ciclo de fetch."
+		self arrow: (busDatos temporary) secondParameter: direccion.
+		self updateRegister: 'bus' secondParameter: direccion.
+		self arrow: (busDatos alu b1) secondParameter: (busDatos temporary).
+		self updateRegister: 'b1' secondParameter: direccion.
+		self arrow:  (busDatos temporary) secondParameter: 1.
+		self updateRegister: 'bus' secondParameter: 1.
+		self arrow: (busDatos alu b2) secondParameter: (busDatos temporary).
+		self updateRegister: 'b2' secondParameter: (busDatos temporary complete).
+		(busDatos alu) ALU: 9. "Realiza la resta"
+		"Movemos el resultado de la resta al PC."
+		self arrow: (busDatos temporary) secondParameter: (busDatos alu b3).
+		self updateRegister: 'bus' secondParameter: (busDatos temporary complete).
+		self arrow: programCounter secondParameter: (busDatos temporary) .
+		self updateRegister: programCounter .
+	].
+
 ]
 
 { #category : #moving }
@@ -1190,6 +1295,7 @@ ControlUnit >> movbxtoreg: register1 secondParameter: register2 [
 	self updateRegister: 'mar' secondParameter: (((busDatos memory) mar) complete) .
 	"Read a la memoria"
 	(busDatos memory) read .
+	step ifTrue: [self displaydatapart: (register1 complete)].
 	self updateRegister: 'mbr' secondParameter: (((busDatos memory) mbr) complete) .
 	self arrow: (busDatos temporary) secondParameter: ((busDatos memory) mbr) . 
 	self updateRegister: 'bus' secondParameter: (((busDatos memory) mbr) complete).
@@ -1205,17 +1311,9 @@ ControlUnit >> movimtobx: immediate secondParameter: register [
 	self movimtoreg: immediate secondParameter: ((busDatos memory) mbr) . 
 	self movregtoreg: register secondParameter: ((busDatos memory) mar) . 
 	(busDatos memory) overwrite .
+	step ifTrue: [self displaydatapart: (register complete)].
 
 	
-
-]
-
-{ #category : #moving }
-ControlUnit >> movimtomem: immediate secondParameter: direccion [
-	"Simula la instruccion de mov de un inmediato a una posición en memoria"
-	self movimtoreg: direccion secondParameter:((busDatos memory) mbr)  . 
-	self movimtoreg: direccion secondParameter: ((busDatos memory) mar) . 
-	(busDatos memory) overwrite .
 
 ]
 
@@ -1242,6 +1340,7 @@ ControlUnit >> movmemtoreg: direccion secondParameter: registro [
 	"Simula la instruccion de mov del contenido de una posición en memoria a un registro"
 	self movimtoreg: direccion secondParameter: ((busDatos memory) mar) . 
 	(busDatos memory) read .
+	step ifTrue: [self displaydatapart: direccion].
 	self updateRegister: 'mbr' secondParameter: (((busDatos memory) mbr) complete) .
 	self arrow: (busDatos temporary) secondParameter: ((busDatos memory) mbr) . 
 	self updateRegister: 'bus' secondParameter: (((busDatos memory) mbr) complete).
@@ -1262,6 +1361,7 @@ ControlUnit >> movregtobx: register1 secondParameter: register2 [
 	self arrow: ((busDatos memory) mar) secondParameter: (busDatos temporary) . 
 	self updateRegister: 'mar' secondParameter: (((busDatos memory) mar) complete) .
 	(busDatos memory) overwrite .
+	step ifTrue: [self displaydatapart: (register2 complete)].
 
 ]
 
@@ -1274,6 +1374,7 @@ ControlUnit >> movregtomem: register1 secondParameter: direccion [
 	self updateRegister: 'mbr' secondParameter: (((busDatos memory) mbr) complete) .
 	self movimtoreg: direccion secondParameter: ((busDatos memory) mar) . 
 	(busDatos memory) overwrite .
+	step ifTrue: [self displaydatapart: direccion].
 
 ]
 
@@ -1370,7 +1471,7 @@ ControlUnit >> openFile: fileName [
     	character := filecontent at: index.
 			(character = Character cr) ifTrue: [ 
 				parts := instructionText substrings: ' '.
-				(parts size > 1) ifTrue: [  
+				(parts size > 2) ifTrue: [  
 					parts at: 2 put:(((parts at: 2) substrings: ',') at:1).
 				].
 				(parts size = 1) ifTrue: [  
@@ -1439,6 +1540,9 @@ ControlUnit >> opimtoreg: immediate secondParameter: operando1 operation: op [
 	(busDatos alu) shl . ].
 	(op = 'shr') ifTrue: [ 
 	(busDatos alu) shr . ].
+	(op = 'incPC') ifTrue: [
+	(busDatos alu) incPC].
+
 	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
 	self updateRegister: 'carry' secondParameter: ((busDatos flags) carry) .
 	self updateRegister: 'sign' secondParameter: ((busDatos flags) sign) .
@@ -1606,6 +1710,31 @@ ControlUnit >> or: operando1 secondParameter: operando2 [
 ]
 
 { #category : #gui }
+ControlUnit >> out [
+	| message window textMorph scrollbar pasteup|
+	message := '         Valor: ', (busDatos memory mbr complete asString), '
+	Instrucción: ',(busDatos memory mbr instruction asString).
+	
+	window := SystemWindow new.
+	window setLabel: 'Contenido en el MBR'.
+	textMorph := TextMorph new.
+	textMorph contents: message.
+	textMorph setProperty: #wrap toValue: true.
+	
+	scrollbar := ScrollPane new.
+	window addMorph: scrollbar.
+	window addMorph: textMorph frame: (0 @ 0 extent: 1 @ 1).
+	pasteup := PasteUpMorph new.
+	pasteup := PasteUpMorph new.
+	pasteup extent: 1000@2500.
+	pasteup addMorph: textMorph .
+	scrollbar scroller addMorph: pasteup.
+	window addMorph: scrollbar frame: (0@0 corner: 1@1).
+	window openInWorld.
+	window position: 1000@200.
+]
+
+{ #category : #gui }
 ControlUnit >> outacerca [
 	| window textMorph scrollbar pasteup|
 	
@@ -1632,11 +1761,12 @@ ControlUnit >> outacerca [
 	scrollbar scroller addMorph: pasteup.
 	window addMorph: scrollbar frame: (0@0 corner: 1@1).
 window openInWorld.
+window position: 1000@200.
 
 	
 ]
 
-{ #category : #accessing }
+{ #category : #gui }
 ControlUnit >> outcode [
 	| message window textMorph scrollbar pasteup|
 	message := ''.
@@ -1670,9 +1800,10 @@ ControlUnit >> outcode [
 	scrollbar scroller addMorph: pasteup.
 	window addMorph: scrollbar frame: (0@0 corner: 1@1).
 	window openInWorld.
+	window position: 1000@200.
 ]
 
-{ #category : #accessing }
+{ #category : #gui }
 ControlUnit >> outdata [
 	| message window textMorph scrollbar pasteup|
 	message := ''.
@@ -1696,7 +1827,25 @@ ControlUnit >> outdata [
 	scrollbar scroller addMorph: pasteup.
 	window addMorph: scrollbar frame: (0@0 corner: 1@1).
 window openInWorld.
+window position: 1000@200.
 
+
+]
+
+{ #category : #gui }
+ControlUnit >> outreg [
+	|gui register options|
+	gui := UIManager default.
+	options := #('ax' 'ah' 'al' 'bx' 'bh' 'bl' 'cx' 'ch' 'cl' 'dx' 'dh' 'dl' 'bus' 'b1' 'b2' 'b3' 'b4' 'pc' 'mar' 'mbr' ).
+	register := gui chooseFrom: options.
+	( register = 0 or: register isNil ) ifFalse: [ 
+		self arrow: (busDatos temporary) secondParameter: (registerDictionary at: (options at: register)) . 
+		self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete).
+		self arrow: ((busDatos memory) mbr) secondParameter: (busDatos temporary) .
+		self updateRegister: 'mbr' secondParameter: (((busDatos memory) mbr) complete).
+		self out.
+		]
+		ifTrue: [ UIManager default inform: 'No se pudo desplegar el contenido del registro'. ] .
 
 ]
 

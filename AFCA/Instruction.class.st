@@ -75,7 +75,14 @@ Instruction class >> initialize [
 		at: 'not' put: 14;
 		at: 'shl' put: 15;
 		at: 'shr' put: 16;
+		at: 'stc' put: 17;
+		at: 'stz' put: 18;
+		at: 'sts' put: 19;
+		at: 'clc' put: 20;
+		at: 'clz' put: 21;
+		at: 'cls' put: 22;
 		at: 'stop' put: 255.
+
 ]
 
 { #category : #converting }
