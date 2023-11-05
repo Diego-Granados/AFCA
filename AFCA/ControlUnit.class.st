@@ -682,6 +682,12 @@ ControlUnit >> creategui [
 	stepInstructionButton color: (Color r: 0 g: 0.9 b: 0.9).
 	stepInstructionButton openInWorld.
 	stepInstructionButton position: (stepInstructionButton position + (190@490)).
+	
+	acercaButton := SimpleButtonMorph new.
+	acercaButton label: 'Acerca de' .
+	acercaButton on: #click send: #outacerca to: self.
+	acercaButton openInWorld.
+	acercaButton position: (closeButton position + (0@50)).
 
 
 ]
@@ -921,7 +927,6 @@ ControlUnit >> executeInstruction [
 { #category : #initialization }
 ControlUnit >> executeProgram [
 	| memory finish |
-	self halt.
 	memory := busDatos memory.
 	"Si el program counter está vacío, lo ponemos a apuntar a la primera posición en memoria.
 	Si no está vacío, continúa ejecutándose desde donde apunta"
@@ -1078,6 +1083,7 @@ ControlUnit >> movbxtoreg: register1 secondParameter: register2 [
 	"En register1 viene bx, bh o bl"
 	"Simula la instruccion de mov de un registro a un registro"
 	self movregtoreg: register1 secondParameter: (busDatos memory mar).
+	self updateRegister: 'mar' secondParameter: (((busDatos memory) mar) complete) .
 	"Read a la memoria"
 	(busDatos memory) read .
 	self updateRegister: 'mbr' secondParameter: (((busDatos memory) mbr) complete) .
@@ -1085,6 +1091,18 @@ ControlUnit >> movbxtoreg: register1 secondParameter: register2 [
 	self updateRegister: 'bus' secondParameter: (((busDatos memory) mbr) complete).
 	self arrow: register2 secondParameter: (busDatos temporary) . 
 	self updateRegister: register2 .
+
+]
+
+{ #category : #moving }
+ControlUnit >> movimtobx: immediate secondParameter: register [
+	"En register1 viene bx, bh o bl"
+	"Simula la instruccion de mov de un registro a una posición en memoria marcada por el bx"
+	self movimtoreg: immediate secondParameter: ((busDatos memory) mbr) . 
+	self movregtoreg: register secondParameter: ((busDatos memory) mar) . 
+	(busDatos memory) overwrite .
+
+	
 
 ]
 
@@ -1125,6 +1143,21 @@ ControlUnit >> movmemtoreg: direccion secondParameter: registro [
 	self updateRegister: 'bus' secondParameter: (((busDatos memory) mbr) complete).
 	self arrow: registro secondParameter: (busDatos temporary) . 
 	self updateRegister: registro .
+
+]
+
+{ #category : #moving }
+ControlUnit >> movregtobx: register1 secondParameter: register2 [
+	"Simula la instruccion de mov de un registro a una posición en memoria"
+	self arrow: (busDatos temporary) secondParameter:register1 . 
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
+	self arrow: ((busDatos memory) mbr) secondParameter: (busDatos temporary) . 
+	self updateRegister: 'mbr' secondParameter: (((busDatos memory) mbr) complete) .
+	self arrow: (busDatos temporary) secondParameter:register2 . 
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
+	self arrow: ((busDatos memory) mar) secondParameter: (busDatos temporary) . 
+	self updateRegister: 'mar' secondParameter: (((busDatos memory) mar) complete) .
+	(busDatos memory) overwrite .
 
 ]
 
@@ -1174,6 +1207,47 @@ ControlUnit >> not: operando1 [
 	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
 	self arrow: operando1 secondParameter: (busDatos temporary) . 
 	self updateRegister: operando1 .
+
+]
+
+{ #category : #operating }
+ControlUnit >> opbxtoreg: operando2 secondParameter: operando1 operation: op [
+	"Este método realiza operaciones de la unidad de ALU y actualiza registros según la operación especificada."
+	"Lo hace con un el valor en un registro a otro en memoria"
+	self arrow: (busDatos temporary) secondParameter: operando1 . 
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
+	self arrow: ((busDatos alu) b1) secondParameter: (busDatos temporary) . 
+	self updateRegister: 'b1' secondParameter: (((busDatos alu) b1) complete) .
+	self movbxtoreg: operando2 secondParameter: ((busDatos alu) b2) .
+	(op = 'add') ifTrue: [ 
+	(busDatos alu) add . ].
+	((op = 'sub') or: (op = 'cmp')) ifTrue: [ 
+	(busDatos alu) sub . ].
+	(op = 'mul') ifTrue: [ 
+	(busDatos alu) mul . ].
+	(op = 'div') ifTrue: [ 
+	(busDatos alu) div . 
+	self updateRegister: 'b4' secondParameter: (((busDatos alu) b4) complete) .
+	].
+	(op = 'and') ifTrue: [ 
+	(busDatos alu) and . ].
+	(op = 'or') ifTrue: [ 
+	(busDatos alu) or . ].
+	(op = 'xor') ifTrue: [ 
+	(busDatos alu) xor . ].
+	(op = 'shl') ifTrue: [ 
+	(busDatos alu) shl . ].
+	(op = 'shr') ifTrue: [ 
+	(busDatos alu) shl . ].
+	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
+	self updateRegister: 'carry' secondParameter: ((busDatos flags) carry) .
+	self updateRegister: 'sign' secondParameter: ((busDatos flags) sign) .
+	self updateRegister: 'zero' secondParameter: ((busDatos flags) zero) .
+	(op = 'cmp') ifFalse: [
+	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
+	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
+	self arrow: operando1 secondParameter: (busDatos temporary) . 
+	self updateRegister: operando1 . ].
 
 ]
 
@@ -1275,7 +1349,7 @@ ControlUnit >> opimtoreg: immediate secondParameter: operando1 operation: op [
 ]
 
 { #category : #operating }
-ControlUnit >> opmemtoreg: operando1 secondParameter: direccion operation: op [
+ControlUnit >> opmemtoreg: direccion secondParameter: operando1 operation: op [
 	"Este método realiza operaciones de la unidad de ALU y actualiza registros según la operación especificada."
 	"Lo hace con un el valor en un registro a otro en memoria"
 	self arrow: (busDatos temporary) secondParameter: operando1 . 
@@ -1450,7 +1524,7 @@ ControlUnit >> outacerca [
 	window addMorph: textMorph frame: (0 @ 0 extent: 1 @ 1).
 	pasteup := PasteUpMorph new.
 	pasteup := PasteUpMorph new.
-	pasteup extent: 1000@2500.
+	pasteup extent: 500@500.
 	pasteup addMorph: textMorph .
 	scrollbar scroller addMorph: pasteup.
 	window addMorph: scrollbar frame: (0@0 corner: 1@1).

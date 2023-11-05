@@ -47,8 +47,8 @@ Memory >> initialize [
 	].
 
 	code := Array new: 128.
-	mar := Subregister new.
-	mbr := Subregister new.
+	mar := Subregister new initialize: 'mar'.
+	mbr := Subregister new initialize: 'mbr'.
 
 ]
 

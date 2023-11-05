@@ -106,10 +106,10 @@ ALUnit >> initialize [
 { #category : #initialization }
 ALUnit >> initialize: busdedatos [
 	"Constructor que además recibe un bus de datos para acceder a las banderas"
-	b1 := Subregister new.
-	b2 := Subregister new.
-	b3 := Subregister new.
-	b4 := Subregister new.
+	b1 := Subregister new initialize: 'b1'.
+	b2 := Subregister new initialize: 'b2'.
+	b3 := Subregister new initialize: 'b3'.
+	b4 := Subregister new initialize: 'b4'.
 	busdatos := busdedatos .
 
 ]
