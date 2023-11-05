@@ -169,7 +169,9 @@ Class {
 		'ArithmeticStrings',
 		'InstructionMethods',
 		'OperandDecodes',
-		'OperandStrings'
+		'OperandStrings',
+		'restoreButton',
+		'saveButton'
 	],
 	#category : #AFCA
 }
@@ -689,6 +691,19 @@ ControlUnit >> creategui [
 	acercaButton openInWorld.
 	acercaButton position: (closeButton position + (0@50)).
 
+	saveButton := SimpleButtonMorph new.
+	saveButton label: 'Guardar AFCA'.
+	saveButton on: #click send: #saveAFCA to: self.
+	saveButton color: (Color r: 1.0 g: 0.5 b: 0).
+	saveButton openInWorld.
+	saveButton position: (saveButton position + (700@100)).
+	
+	restoreButton := SimpleButtonMorph new.
+	restoreButton label: 'Cargar AFCA'.
+	restoreButton on: #click send: #restoreAFCA to: self.
+	restoreButton color: (Color r: 1.0 g: 0.5 b: 0).
+	restoreButton openInWorld.
+	restoreButton position: (restoreButton position + (700@150)).
 
 ]
 
@@ -1010,6 +1025,7 @@ ControlUnit >> infile [
 	( answer = '' or: answer isNil ) ifFalse: [ 
 		self resetAFCA.
 		instructions := self openFile: answer.
+		"Procesa las instrucciones y las guarda en memoria"
 		instructions ifNotNil: [ "|lastInstruction|"
 			1 to: instructions size do: [ :index | 
 				| instruction | 
@@ -1238,7 +1254,7 @@ ControlUnit >> opbxtoreg: operando2 secondParameter: operando1 operation: op [
 	(op = 'shl') ifTrue: [ 
 	(busDatos alu) shl . ].
 	(op = 'shr') ifTrue: [ 
-	(busDatos alu) shl . ].
+	(busDatos alu) shr . ].
 	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
 	self updateRegister: 'carry' secondParameter: ((busDatos flags) carry) .
 	self updateRegister: 'sign' secondParameter: ((busDatos flags) sign) .
@@ -1255,13 +1271,12 @@ ControlUnit >> opbxtoreg: operando2 secondParameter: operando1 operation: op [
 ControlUnit >> openFile: fileName [
 	|fileRef instructionText parts stream filecontent instructionArray| 
 	"Es importante cambiar la ubicación del archivo para poder leerlo."
-	fileRef := fileName asFileReference .
+	fileRef := ('datos\',fileName) asFileReference .
 	instructionText := '' .
-	instructionArray := OrderedCollection new.
+	instructionArray := OrderedCollection new. "Arreglo donde se guardan las instrucciones"
 	(fileRef exists) ifTrue: [
 		stream := fileRef readStream . 
 		filecontent := stream contents .
-		Transcript show: filecontent.
 		1 to: filecontent size do: [:index |
    		| character |
     	character := filecontent at: index.
@@ -1335,7 +1350,7 @@ ControlUnit >> opimtoreg: immediate secondParameter: operando1 operation: op [
 	(op = 'shl') ifTrue: [ 
 	(busDatos alu) shl . ].
 	(op = 'shr') ifTrue: [ 
-	(busDatos alu) shl . ].
+	(busDatos alu) shr . ].
 	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
 	self updateRegister: 'carry' secondParameter: ((busDatos flags) carry) .
 	self updateRegister: 'sign' secondParameter: ((busDatos flags) sign) .
@@ -1376,7 +1391,7 @@ ControlUnit >> opmemtoreg: direccion secondParameter: operando1 operation: op [
 	(op = 'shl') ifTrue: [ 
 	(busDatos alu) shl . ].
 	(op = 'shr') ifTrue: [ 
-	(busDatos alu) shl . ].
+	(busDatos alu) shr . ].
 	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
 	self updateRegister: 'carry' secondParameter: ((busDatos flags) carry) .
 	self updateRegister: 'sign' secondParameter: ((busDatos flags) sign) .
@@ -1433,7 +1448,7 @@ ControlUnit >> opregtomem: direccion secondParameter: operando1 operation: op [
 	].
 
 	(op = 'shr') ifTrue: [ 
-		(busDatos alu) shl . "Realiza un desplazamiento a la izquierda si la operación es 'shr'."
+		(busDatos alu) shr . "Realiza un desplazamiento a la izquierda si la operación es 'shr'."
 	].
 
 	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) . "Actualiza el registro b3 con su valor completo."
@@ -1478,7 +1493,7 @@ ControlUnit >> opregtoreg: operando2 secondParameter: operando1 operation: op [
 	(op = 'shl') ifTrue: [ 
 	(busDatos alu) shl . ].
 	(op = 'shr') ifTrue: [ 
-	(busDatos alu) shl . ].
+	(busDatos alu) shr . ].
 	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) .
 	self updateRegister: 'carry' secondParameter: ((busDatos flags) carry) .
 	self updateRegister: 'sign' secondParameter: ((busDatos flags) sign) .
@@ -1597,6 +1612,30 @@ window openInWorld.
 
 ]
 
+{ #category : #gui }
+ControlUnit >> refreshgui [
+	"Refreza las cajas del GUI"
+
+	self updateRegister: ax.
+	self updateRegister: bx.
+	self updateRegister: cx.
+	self updateRegister: dx.
+	self updateRegister: programCounter.
+	self updateRegister: instructionRegister.
+	self updateRegister: (busDatos alu b1).
+	self updateRegister: (busDatos alu b2).
+	self updateRegister: (busDatos alu b3).
+	self updateRegister: (busDatos alu b4).
+	self updateRegister: (busDatos memory mar).
+	self updateRegister: (busDatos memory mbr).
+	self updateRegister: 'carry' secondParameter: (busDatos flags carry).
+	self updateRegister: 'sign' secondParameter: (busDatos flags sign).
+	self updateRegister: 'zero' secondParameter: (busDatos flags zero).
+	self updateRegister: 'interrupt' secondParameter: (busDatos flags interrupt).
+	self updateRegister: 'bus' secondParameter: (busDatos temporary complete).
+
+]
+
 { #category : #initialization }
 ControlUnit >> resetAFCA [
 	"Reestable toda la AFCA"
@@ -1638,6 +1677,144 @@ instructionRegister := Subregister new initialize: 'ir'.
 	self updateRegister: dx.
 	self updateRegister: programCounter.
 	self updateRegister: instructionRegister.
+
+]
+
+{ #category : #'as yet unclassified' }
+ControlUnit >> restoreAFCA [
+	"Método para restaurar un archivo de un AFCA. Se lee del folder datos/"
+	|gui answer archivo line flags memory alu data code stream|
+	gui := UIManager default.
+	answer := gui request: '¿Cuál es el nombre del archivo?' initialAnswer: 'afca.txt' .
+	(answer = '') ifFalse: [
+		| lineArray |
+		"Reestablecemos le AFCA"
+		self resetAFCA.
+		"Abrimos el archivo"
+		answer := 'datos\',answer.
+		
+		stream := ('datos\',answer) asFileReference readStream . 
+		archivo := stream contents .
+		
+		flags := busDatos flags.
+		alu := busDatos alu.
+		memory := busDatos memory .
+		data := memory data.
+		code := memory code.
+		
+		
+		line := archivo nextLine.
+		lineArray := line substrings.
+		"Leemos y actualizamos los registros con la información del archivo"
+		ax complete: ((lineArray at: 1) asNumber).
+		bx complete: ((lineArray at: 2) asNumber).
+		cx complete: ((lineArray at: 3) asNumber).
+		dx complete: ((lineArray at: 4) asNumber).
+		programCounter complete: ((lineArray at: 5) asNumber).
+		alu b1 complete: ((lineArray at: 6) asNumber).
+		alu b2 complete: ((lineArray at: 7) asNumber).
+		alu b3 complete: ((lineArray at: 8) asNumber).
+		alu b4 complete: ((lineArray at: 9) asNumber).
+		(busDatos temporary) complete: ((lineArray at: 10) asNumber).
+		flags carry: ((lineArray at: 11) asNumber).
+		flags sign: ((lineArray at: 12) asNumber).
+		flags zero: ((lineArray at: 13) asNumber).
+		flags interrupt: ((lineArray at: 14) asNumber).
+		memory mar complete: ((lineArray at: 15) asNumber).
+		memory mbr complete: ((lineArray at: 16) asNumber).
+	
+		"actualiza el instructionRegister"
+		line := archivo nextLine.
+		lineArray := line substrings.
+		
+		instructionRegister instruction: (Instruction new initializeNumber: (lineArray at: 1)
+			destino: (lineArray at: 2)
+			fuente: (lineArray at: 3)
+			dato: (lineArray at: 4)).
+			
+		"Actualiza el segmento de datos en memoria"
+		1 to: data size do: [:index | 
+			line := archivo nextLine.
+			data at: index put: (line asNumber).
+			].
+		
+		"Actualiza el segmento de código en memoria"
+		1 to: code size do: [:index |
+			line := archivo nextLine.
+			lineArray := line substrings.
+			(lineArray size = 1)
+			ifFalse: [code at: index put: (Instruction new
+				initializeNumber: (lineArray at: 1)
+				destino: (lineArray at: 2)
+				fuente: (lineArray at: 3)
+				dato: (lineArray at: 4)).]
+			].
+	
+		"Refrezca el gui"
+		self refreshgui.
+		
+		UIManager default inform: 'AFCA cargada'.					
+	] ifTrue: [UIManager default inform: 'El nombre no puede estar vacío.'.].
+
+]
+
+{ #category : #'as yet unclassified' }
+ControlUnit >> saveAFCA [
+	|gui answer archivo content flags memory alu instruction data code|
+	gui := UIManager default.
+	(instructionRegister instruction) ifNil: [UIManager default inform: 'Ejecute una instrucción antes de guardar el estado del AFCA'.]
+	ifNotNil: [
+	answer := gui request: '¿Cuál es el nombre del archivo del AFCA?' initialAnswer: 'afca.txt' .
+	(answer = '') ifFalse: [
+		answer := 'datos\',answer.
+		archivo := ('datos\',answer) asFileReference writeStream.
+		"Escribimos los registros en el archivo. Están separados por espacios en blanco
+		Orden:
+		ax bx cx dx programCounter b1 b2 b3 b4 busDatos carry sign zero interrupt mar mbr
+		instructionRegister
+		datos: 1 por línea.
+		código: 1 instrucción por línea
+		Las instrucciones van a tener el formato:
+		instruccionCode destinoCode fuenteCode cuartoDato"
+		flags := busDatos flags.
+		alu := busDatos alu.
+		memory := busDatos memory .
+		content := (ax complete asString),' ',(bx complete asString),' ',(cx complete asString),' ',(dx complete asString),' ',(programCounter complete asString),' ',( alu b1 complete asString),' ',(alu b2 complete asString),' ',(alu b3 complete asString),' ',(alu b4 complete asString),' ',(busDatos temporary complete asString),' ',(flags carry asString),' ',(flags sign asString),' ',(flags zero asString),' ',(flags interrupt asString),' ',(memory mar complete asString),' ',(memory mbr complete asString),(Character cr asString), (Character lf asString).
+		instruction := instructionRegister instruction.
+		content := content,(instruction instruccion asString),' ',(instruction destino asString),' ',(instruction fuente asString),' ',(instruction cuartodato asString),(Character cr asString), (Character lf asString).
+		
+		data := memory data.
+		code := memory code.
+		
+		"Escribimos el segmento de datos"
+		1 to: data size do:
+		[:index |
+		content := content,((data at: index) asString),(Character cr asString), (Character lf asString).].
+		
+		"Escribimos el segmento de codigo"
+		1 to: code size do: [:index | | instructionStr |
+			instruction := code at: index.
+			instruction ifNil: [content := content,'nil',(Character cr asString), (Character lf asString).]
+			ifNotNil: [
+			instructionStr := (instruction instruccion asString),' ',(instruction destino asString),' ',(instruction fuente asString),' ',(instruction cuartodato asString),(Character cr asString), (Character lf asString).
+			content := content,instructionStr.].].
+		
+		"self resetAFCA.
+		instructions := self openFile: answer.
+		instructions ifNotNil: [ 
+			1 to: instructions size do: [ :index | 
+				|  instruction | 
+				instruction := instructions at: index.
+				self movinstructiontomem: instruction to: index.
+			]."
+		"lastInstruction := Instruction new initialize: 'stop' .
+		self movinstructiontomem: lastInstruction to: ((instructions size) + 1)."
+		archivo nextPutAll: content.
+		archivo close.
+		UIManager default inform: 'AFCA guardada en archivo'.
+		]
+	ifTrue: [UIManager default inform: 'El nombre no puede estar vacío.'.].
+	].
 
 ]
 
@@ -1805,6 +1982,7 @@ ControlUnit >> updateRegister: register [
 		step ifTrue: [self stepInstruction: 'b4'].
 		^ value ].
 	regUpdate = 'ir' ifTrue: [
+		value := instructionRegister instruction.
 		irvalue contents: value asString.
 		step ifTrue: [self stepInstruction: 'ir'].
 		^ value ].

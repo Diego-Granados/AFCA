@@ -35,6 +35,12 @@ Flags >> carry [
 	^carry
 ]
 
+{ #category : #accessing }
+Flags >> carry: value [
+	carry := value.
+
+]
+
 { #category : #flags }
 Flags >> clc [
 	carry := 0 .
@@ -70,8 +76,20 @@ Flags >> interrupt [
 ]
 
 { #category : #accessing }
+Flags >> interrupt: value [
+	interrupt := value.
+
+]
+
+{ #category : #accessing }
 Flags >> sign [
 	^sign
+]
+
+{ #category : #accessing }
+Flags >> sign: value [
+	sign := value.
+
 ]
 
 { #category : #flags }
@@ -97,4 +115,10 @@ Flags >> stz [
 { #category : #accessing }
 Flags >> zero [
 	^zero
+]
+
+{ #category : #accessing }
+Flags >> zero: value [
+	zero := value.
+
 ]
