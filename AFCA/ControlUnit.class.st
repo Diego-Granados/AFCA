@@ -848,7 +848,7 @@ ControlUnit >> displayStepWindow [
 	myWindow addMorph: stepButton.
 	myWindow addMorph: viewCodeButton .
 	myWindow addMorph: viewDataButton  .
-	myWindow position: 1000@200.
+	myWindow position: 800@200.
 
 ]
 
@@ -879,7 +879,7 @@ ControlUnit >> displaycode [
 	scrollbar scroller addMorph: pasteup.
 	window addMorph: scrollbar frame: (0@0 corner: 1@1).
 	window openInWorld.
-	window position: 1000@200.
+	window position: 800@200.
 
 ]
 
@@ -908,7 +908,7 @@ ControlUnit >> displaydata [
 	scrollbar scroller addMorph: pasteup.
 	window addMorph: scrollbar frame: (0@0 corner: 1@1).
 window openInWorld.
-window position: 1000@200.
+window position: 800@200.
 
 ]
 
@@ -941,7 +941,7 @@ ControlUnit >> displaydatapart: position [
 	scrollbar scroller addMorph: pasteup.
 	dataWindow addMorph: scrollbar frame: (0@0 corner: 1@1).
 	dataWindow openInWorld.
-	dataWindow position: 1000@200.
+	dataWindow position: 800@200.
 
 
 ]
@@ -1223,6 +1223,23 @@ ControlUnit >> inreg [
 		]
 		ifFalse: [ UIManager default inform: 'No se pudo modificar el registro'. ] .
 		]. 
+
+]
+
+{ #category : #gui }
+ControlUnit >> inreg: register [
+	|gui valid|
+	gui := UIManager default.
+	
+		valid := self in.
+		valid ifTrue: [ 
+		self arrow: (busDatos temporary) secondParameter: ((busDatos memory) mbr) . 
+		self updateRegister: 'bus' secondParameter: (((busDatos memory) mbr) complete).
+		self arrow: register secondParameter: (busDatos temporary) . 
+		self updateRegister: register .
+ 		UIManager default inform: 'Registro modificado.'.
+		]
+		ifFalse: [ UIManager default inform: 'No se pudo modificar el registro'. ] .
 
 ]
 
@@ -1731,7 +1748,7 @@ ControlUnit >> out [
 	scrollbar scroller addMorph: pasteup.
 	window addMorph: scrollbar frame: (0@0 corner: 1@1).
 	window openInWorld.
-	window position: 1000@200.
+	window position: 800@200.
 ]
 
 { #category : #gui }
@@ -1761,7 +1778,7 @@ ControlUnit >> outacerca [
 	scrollbar scroller addMorph: pasteup.
 	window addMorph: scrollbar frame: (0@0 corner: 1@1).
 window openInWorld.
-window position: 1000@200.
+window position: 800@200.
 
 	
 ]
@@ -1800,7 +1817,7 @@ ControlUnit >> outcode [
 	scrollbar scroller addMorph: pasteup.
 	window addMorph: scrollbar frame: (0@0 corner: 1@1).
 	window openInWorld.
-	window position: 1000@200.
+	window position: 800@200.
 ]
 
 { #category : #gui }
@@ -1827,7 +1844,7 @@ ControlUnit >> outdata [
 	scrollbar scroller addMorph: pasteup.
 	window addMorph: scrollbar frame: (0@0 corner: 1@1).
 window openInWorld.
-window position: 1000@200.
+window position: 800@200.
 
 
 ]
@@ -1846,6 +1863,19 @@ ControlUnit >> outreg [
 		self out.
 		]
 		ifTrue: [ UIManager default inform: 'No se pudo desplegar el contenido del registro'. ] .
+
+]
+
+{ #category : #gui }
+ControlUnit >> outreg: register [
+	|gui |
+	gui := UIManager default.
+
+		self arrow: (busDatos temporary) secondParameter: register. 
+		self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete).
+		self arrow: ((busDatos memory) mbr) secondParameter: (busDatos temporary) .
+		self updateRegister: 'mbr' secondParameter: (((busDatos memory) mbr) complete).
+		self out.
 
 ]
 
