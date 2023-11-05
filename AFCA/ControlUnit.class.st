@@ -163,7 +163,9 @@ Class {
 		'dataWindow',
 		'runInstructionButton',
 		'stepInstructionButton',
-		'resetButton'
+		'resetButton',
+		'inregButton',
+		'stiButton'
 	],
 	#classVars : [
 		'ArithmeticStrings',
@@ -704,6 +706,20 @@ ControlUnit >> creategui [
 	restoreButton color: (Color r: 1.0 g: 0.5 b: 0).
 	restoreButton openInWorld.
 	restoreButton position: (restoreButton position + (700@150)).
+	
+	inregButton := SimpleButtonMorph new.
+	inregButton label: 'Modificar registro'.
+	inregButton on: #click send: #inreg to: self.
+	inregButton color: (Color r: 0 g: 0.9 b: 0.9).
+	inregButton openInWorld.
+	inregButton position: (stepInstructionButton position + (0@30)).
+	
+	stiButton := SimpleButtonMorph new.
+	stiButton label: 'Cargar AFCA'.
+	stiButton on: #click send: #sti to: self.
+	stiButton color: (Color r: 1.0 g: 0.5 b: 0).
+	stiButton openInWorld.
+	stiButton position: (restoreButton position + (0@50)).
 
 ]
 
@@ -1017,6 +1033,21 @@ ControlUnit >> executeProgram [
 
 ]
 
+{ #category : #microinstructions }
+ControlUnit >> in [
+|value gui|
+	gui := UIManager default.
+	value := gui request: '¿Cuál es el nuevo valor?' initialAnswer: '0' .
+	(value = '' or: value isNil) ifFalse: [ 
+	(value allSatisfy: #isDigit) ifTrue: [value := value asNumber.
+	self movimtoreg: value secondParameter: (busDatos memory) mbr . 
+	self updateRegister: 'mbr' secondParameter: value .
+	^ true.
+	] ifFalse: [ UIManager default inform: 'Ese valor no es válido.'.
+	^ false . ]. ] ifTrue: [ UIManager default inform: 'El valor no puede estar vacío.'.
+	^ false . ].
+]
+
 { #category : #'file support' }
 ControlUnit >> infile [
 	|gui answer instructions|
@@ -1073,8 +1104,37 @@ ControlUnit >> initialize [
     at: 'cl' put: cl;
     at: 'dx' put: dx;
     at: 'dh' put: dh;
-    at: 'dl' put: dl.
+    at: 'dl' put: dl;
+	 at: 'ir' put: instructionRegister;
+	 at: 'pc' put: programCounter;
+	 at: 'mar' put: (busDatos memory mar);
+	 at: 'mbr' put: (busDatos memory mbr);
+	 at: 'b1' put: (busDatos alu b1);
+	at: 'b2' put: (busDatos alu b2);
+	at: 'b3' put: (busDatos alu b3);
+	at: 'b4' put: (busDatos alu b4);
+	at: 'bus' put: (busDatos temporary).
 	self creategui .
+
+]
+
+{ #category : #modes }
+ControlUnit >> inreg [
+	|gui register valid options|
+	gui := UIManager default.
+	options := #('ax' 'ah' 'al' 'bx' 'bh' 'bl' 'cx' 'ch' 'cl' 'dx' 'dh' 'dl' 'bus' 'b1' 'b2' 'b3' 'b4' 'pc' 'mar' 'mbr' ).
+	register := gui chooseFrom: options.
+	( register = 0 or: register isNil ) ifFalse: [ 
+		valid := self in.
+		valid ifTrue: [ 
+		self arrow: (busDatos temporary) secondParameter: ((busDatos memory) mbr) . 
+		self updateRegister: 'bus' secondParameter: (((busDatos memory) mbr) complete).
+		self arrow: (registerDictionary at: (options at: register)) secondParameter: (busDatos temporary) . 
+		self updateRegister: (registerDictionary at: (options at: register)) .
+ 		UIManager default inform: 'Registro modificado.'.
+		]
+		ifFalse: [ UIManager default inform: 'No se pudo modificar el registro'. ] .
+		]. 
 
 ]
 
@@ -1669,14 +1729,18 @@ instructionRegister := Subregister new initialize: 'ir'.
     at: 'cl' put: cl;
     at: 'dx' put: dx;
     at: 'dh' put: dh;
-    at: 'dl' put: dl.
+    at: 'dl' put: dl;
+	 at: 'ir' put: instructionRegister;
+	 at: 'pc' put: programCounter;
+	 at: 'mar' put: (busDatos memory mar);
+	 at: 'mbr' put: (busDatos memory mbr);
+	 at: 'b1' put: (busDatos alu b1);
+	at: 'b2' put: (busDatos alu b2);
+	at: 'b3' put: (busDatos alu b3);
+	at: 'b4' put: (busDatos alu b4);
+	at: 'bus' put: (busDatos temporary).
 
-	self updateRegister: ax.
-	self updateRegister: bx.
-	self updateRegister: cx.
-	self updateRegister: dx.
-	self updateRegister: programCounter.
-	self updateRegister: instructionRegister.
+	self refreshgui .
 
 ]
 
