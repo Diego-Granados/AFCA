@@ -29,6 +29,16 @@ Class {
 	#category : #AFCA
 }
 
+{ #category : #accessing }
+Memory >> code [
+^code
+]
+
+{ #category : #accessing }
+Memory >> data [
+^cells.
+]
+
 { #category : #initialization }
 Memory >> initialize [  
 	cells := Array new:128.

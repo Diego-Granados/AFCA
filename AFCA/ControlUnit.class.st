@@ -155,7 +155,15 @@ Class {
 		'mbrinstruction',
 		'businstruction',
 		'runProgramButton',
-		'closeButton'
+		'closeButton',
+		'ayudaButton',
+		'acercaButton',
+		'stepProgramButton',
+		'step',
+		'dataWindow',
+		'runInstructionButton',
+		'stepInstructionButton',
+		'resetButton'
 	],
 	#classVars : [
 		'ArithmeticStrings',
@@ -203,9 +211,9 @@ ControlUnit class >> initialize [
 		at: 10 put: 'reg';
 		at: 11 put: 'reg';
 		at: 12 put: 'mem';
-		at: 13 put: 'mem';
-		at: 14 put: 'mem';
-		at: 15 put: 'mem';
+		at: 13 put: 'bx';
+		at: 14 put: 'bx';
+		at: 15 put: 'bx';
 		at: 16 put: 'im'.
 
 
@@ -377,6 +385,12 @@ World submorphs select: [ :m |
     m class = TextMorph and: [ 
     m isLocked not ] ] 
 thenDo: [ :m | m delete ].
+
+]
+
+{ #category : #gui }
+ControlUnit >> closedisplaycode [
+	dataWindow delete.
 
 ]
 
@@ -613,17 +627,17 @@ ControlUnit >> creategui [
 	openFileButton label: 'Cargar programa' .
 	openFileButton on: #click send: #infile to: self.
 	openFileButton openInWorld.
-	openFileButton position: (openFileButton position + (40@600)).
+	openFileButton position: (openFileButton position + (40@400)).
 	
 	CodeSegButton := SimpleButtonMorph new.
 	CodeSegButton label: 'Ver código' .
-	CodeSegButton on: #click send: #outcode to: self.
+	CodeSegButton on: #click send: #displaycode to: self.
 	CodeSegButton openInWorld.
 	CodeSegButton position: (CodeSegButton position + (570@460)).
 	
 	DataSegButton := SimpleButtonMorph new.
 	DataSegButton label: 'Ver datos' .
-	DataSegButton on: #click send: #outdata to: self.
+	DataSegButton on: #click send: #displaydata to: self.
 	DataSegButton openInWorld.
 	DataSegButton position: (DataSegButton position + (570@490)).
 	memorygui addMorph: CodeSegButton .
@@ -633,13 +647,42 @@ ControlUnit >> creategui [
 	runProgramButton label: 'Ejecutar programa' .
 	runProgramButton on: #click send: #executeProgram to: self.
 	runProgramButton openInWorld.
-	runProgramButton position: (runProgramButton position + (100@600)).
+	runProgramButton position: (openFileButton position + (150@0)).
 	
 	closeButton := SimpleButtonMorph new.
 	closeButton label: 'Cerrar AFCA' .
 	closeButton on: #click send: #close to: self.
+	closeButton color: (Color r: 0.8 g: 0 b: 0).
 	closeButton openInWorld.
-	closeButton position: (closeButton position + (100@600)).
+	closeButton position: (openFileButton position + (0@100)).
+
+	resetButton := SimpleButtonMorph new.
+	resetButton label: 'Restablecer AFCA' .
+	resetButton color: (Color r: 0.8 g: 0 b: 0).
+	resetButton on: #click send: #resetAFCA to: self.
+	resetButton openInWorld.
+	resetButton position: (resetButton position + (40@450)).
+
+	stepProgramButton := SimpleButtonMorph new.
+	stepProgramButton label: 'Programa paso a paso' .
+	stepProgramButton on: #click send: #stepProgram to: self.
+	stepProgramButton openInWorld.
+	stepProgramButton position: (stepProgramButton position + (190@430)).
+
+	runInstructionButton := SimpleButtonMorph new.
+	runInstructionButton label: 'Ejecutar instrucción'.
+	runInstructionButton on: #click send: #executeInstruction to: self.
+	runInstructionButton color: (Color r: 0 g: 0.9 b: 0.9).
+	runInstructionButton openInWorld.
+	runInstructionButton position: (runInstructionButton position + (190@460)).
+	
+	stepInstructionButton := SimpleButtonMorph new.
+	stepInstructionButton label: 'Instrucción paso a paso'.
+	stepInstructionButton on: #click send: #stepInstruction to: self.
+	stepInstructionButton color: (Color r: 0 g: 0.9 b: 0.9).
+	stepInstructionButton openInWorld.
+	stepInstructionButton position: (stepInstructionButton position + (190@490)).
+
 
 ]
 
@@ -651,6 +694,130 @@ ControlUnit >> cx [
 { #category : #accessing }
 ControlUnit >> dh [
 	^dh
+
+]
+
+{ #category : #gui }
+ControlUnit >> displayStepWindow [
+	| myWindow windowColor stepButton viewCodeButton viewDataButton|
+	windowColor := Color r: 0 g: 0.9 b: 0.2.
+	
+	myWindow := Morph new color: windowColor.
+	myWindow openInWorld.
+	myWindow position: (myWindow position + (600@200)).
+	myWindow extent: 300@150.
+	
+	stepButton := SimpleButtonMorph new.
+	stepButton label: 'Siguiente microinstrucción' .
+	stepButton on: #click send: #stepInstruction to: self.
+	stepButton openInWorld.
+	stepButton position: (stepButton position + (620@220)).
+	
+	viewCodeButton := SimpleButtonMorph new.
+	viewCodeButton label: 'Ver código' .
+	viewCodeButton on: #click send: #displaycode to: self.
+	viewCodeButton openInWorld.
+	viewCodeButton position: (viewCodeButton position + (620@260)).
+
+	
+	viewDataButton := SimpleButtonMorph new.
+	viewDataButton label: 'Ver datos' .
+	viewDataButton on: #click send: #displaydata to: self.
+	viewDataButton openInWorld.
+	viewDataButton position: (viewDataButton position + (620@300)).
+	myWindow addMorph: stepButton.
+	myWindow addMorph: viewCodeButton .
+	myWindow addMorph: viewDataButton  .
+
+]
+
+{ #category : #gui }
+ControlUnit >> displaycode [
+	| memory code message window textMorph scrollbar pasteup|
+	memory := (busDatos memory) .
+	code := memory code.
+	message := ''.
+	1 to: code size do: [:index |
+		| instruction |
+		instruction := (code at: index).
+		message := message, '        ',(index asString), ': ', (instruction asString),  ',' , (Character cr asString), (Character lf asString).
+		].
+	window := SystemWindow new.
+	window setLabel: 'Código en la memoria'.
+	textMorph := TextMorph new.
+	textMorph contents: message.
+	textMorph setProperty: #wrap toValue: true.
+	
+	scrollbar := ScrollPane new.
+	window addMorph: scrollbar.
+	window addMorph: textMorph frame: (0 @ 0 extent: 1 @ 1).
+	pasteup := PasteUpMorph new.
+	pasteup := PasteUpMorph new.
+	pasteup extent: 1000@3500.
+	pasteup addMorph: textMorph .
+	scrollbar scroller addMorph: pasteup.
+	window addMorph: scrollbar frame: (0@0 corner: 1@1).
+	window openInWorld.
+
+]
+
+{ #category : #gui }
+ControlUnit >> displaydata [
+	| memory data message window textMorph scrollbar pasteup|
+	memory := (busDatos memory) .
+	data := memory data.
+	message := ''.
+	1 to: data size do: [:index |
+		message := message, '        ',(index asString), ': ', ((data at: index) asString),  ',' , (Character cr asString), (Character lf asString).
+		].
+	window := SystemWindow new.
+	window setLabel: 'Datos en la memoria'.
+	textMorph := TextMorph new.
+	textMorph contents: message.
+	textMorph setProperty: #wrap toValue: true.
+	
+	scrollbar := ScrollPane new.
+	window addMorph: scrollbar.
+	window addMorph: textMorph frame: (0 @ 0 extent: 1 @ 1).
+	pasteup := PasteUpMorph new.
+	pasteup := PasteUpMorph new.
+	pasteup extent: 1000@3500.
+	pasteup addMorph: textMorph .
+	scrollbar scroller addMorph: pasteup.
+	window addMorph: scrollbar frame: (0@0 corner: 1@1).
+window openInWorld.
+
+]
+
+{ #category : #gui }
+ControlUnit >> displaydatapart: position [
+	| memory data message textMorph scrollbar pasteup start end |
+	memory := (busDatos memory) .
+	data := memory data.
+	message := ''.
+	start := position  - 12.
+	start < 0 ifTrue: [start := 0].
+	end := start + 24.
+	end > (memory size) ifTrue: [end := (memory size)].
+	start to: end do: [:index |
+		message := message, '        ',(index asString), ': ', ((data at: index) asString),  ',' , (Character cr asString), (Character lf asString).
+		].
+	dataWindow := SystemWindow new.
+	dataWindow setLabel: 'Datos en la memoria'.
+	textMorph := TextMorph new.
+	textMorph contents: message.
+	textMorph setProperty: #wrap toValue: true.
+	
+	scrollbar := ScrollPane new.
+	dataWindow addMorph: scrollbar.
+	dataWindow addMorph: textMorph frame: (0 @ 0 extent: 1 @ 1).
+	pasteup := PasteUpMorph new.
+	pasteup := PasteUpMorph new.
+	pasteup extent: 1000@3500.
+	pasteup addMorph: textMorph .
+	scrollbar scroller addMorph: pasteup.
+	dataWindow addMorph: scrollbar frame: (0@0 corner: 1@1).
+dataWindow openInWorld.
 
 ]
 
@@ -679,10 +846,87 @@ ControlUnit >> dx [
 ]
 
 { #category : #initialization }
+ControlUnit >> executeInstruction [
+	| memory instruction instructionStr operand1 operand2 operand1Var operand2Var operand1Str operand2Str operand3Str methodStr|
+	memory := busDatos memory.
+	"Si el program counter está vacío, lo ponemos a apuntar a la primera posición en memoria.
+	Si no está vacío, continúa ejecutándose desde donde apunta"
+	(programCounter complete isZero) ifTrue: [programCounter complete: 1.].
+	
+	self updateRegister: 'pc' secondParameter: (programCounter complete).
+
+	
+	"Ciclo de fetch"
+		self arrow: (busDatos temporary) secondParameter: (programCounter complete).
+		self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
+		self arrow: (memory mar) secondParameter: (busDatos temporary) . 
+		self updateRegister: 'mar' secondParameter: ((memory mar) complete) .
+		memory readCode.
+		(((memory mbr instruction) isNil) or: [(memory mbr instruction instruccion) = 255]) ifTrue: [UIManager default inform: 'Fin de ejecución.'.]
+		ifFalse: [
+		self updateRegister: 'mbr' secondParameter: ((memory mbr) instruction) .
+		self arrowInstruction: (busDatos temporary) secondParameter: (memory mbr).
+		self updateRegister: 'bus' secondParameter: ((busDatos temporary) instruction) .
+		self arrowInstruction: instructionRegister secondParameter: (busDatos temporary).
+		self updateRegister: 'ir' secondParameter: (instructionRegister instruction).
+		instruction := instructionRegister instruction.
+		instructionStr := InstructionMethods at: (instruction instruccion).
+		(instruction fuente) ifNotNil: [ 
+		operand1Var := OperandDecodes at: (instruction fuente).
+		operand1Var := self transformOperand: operand1Var data: (instruction cuartodato).
+		(operand1Var isKindOf: Integer) ifFalse: [operand1 := (registerDictionary at: operand1Var)] ifTrue: [operand1 := operand1Var].
+		operand1Str := OperandStrings at: (instruction fuente).].
+		(instruction destino) ifNotNil: [ 
+		operand2Var := OperandDecodes at: (instruction destino).
+		operand2Var := self transformOperand: operand2Var data: (instruction cuartodato).
+		(operand2Var isKindOf: Integer) ifFalse: [operand2 := (registerDictionary at: operand2Var)] ifTrue: [operand2 := operand2Var].
+		operand2Str := OperandStrings at: (instruction destino).].
+	
+		(instruction destino)
+			"No tiene operandos"
+			ifNil: [methodStr := instructionStr.
+					self perform: methodStr asSymbol .]
+			ifNotNil: [
+				(instruction fuente)
+					"Tiene 1 solo operando"
+					ifNil: [methodStr := instructionStr,operand1Str,':'.
+							self perform: methodStr asSymbol with: operand1
+							]
+					ifNotNil:[
+						"Tiene 2 operandos"
+						methodStr := instructionStr,operand1Str,'to',operand2Str,':secondParameter:'.
+						"Si es una operación aritmética, hay que ver cuál es"
+						(instructionStr = 'op')
+							ifTrue: [ operand3Str := ArithmeticStrings at: (instruction instruccion).
+								methodStr := methodStr,'operation:'.
+								self perform: methodStr asSymbol with: operand1 with: operand2 with: operand3Str.
+							]
+							ifFalse: [self perform: methodStr asSymbol with: operand1 with: operand2.].
+						].
+			"Ejecuta la instruccion decodificada"
+			"compiler evaluate: methodStr for: self."
+			
+			"Subciclo de interrupcion"
+			(busDatos flags interrupt isZero) ifFalse: [
+				UIManager default inform: 'Se está atendiendo una interrupción'.
+				busDatos flags cli.
+				]. 
+			"Incrementa el PC"
+			self opimtoreg: 1 secondParameter: programCounter operation: 'add'.
+			].
+		].
+
+]
+
+{ #category : #initialization }
 ControlUnit >> executeProgram [
 	| memory finish |
+	self halt.
 	memory := busDatos memory.
-	programCounter complete: 1.
+	"Si el program counter está vacío, lo ponemos a apuntar a la primera posición en memoria.
+	Si no está vacío, continúa ejecutándose desde donde apunta"
+	(programCounter complete isZero) ifTrue: [programCounter complete: 1.].
+
 	self updateRegister: 'pc' secondParameter: (programCounter complete).
 	
 	finish := false.
@@ -695,7 +939,7 @@ ControlUnit >> executeProgram [
 		self arrow: (memory mar) secondParameter: (busDatos temporary) . 
 		self updateRegister: 'mar' secondParameter: ((memory mar) complete) .
 		memory readCode.
-		((memory mbr instruction instruccion) = 255) ifTrue: [finish  := true.
+		(((memory mbr instruction) isNil) or: [(memory mbr instruction instruccion) = 255]) ifTrue: [finish  := true.
 			UIManager default inform: 'Fin de ejecución.'.]
 		ifFalse: [
 		self updateRegister: 'mbr' secondParameter: ((memory mbr) instruction) .
@@ -755,32 +999,28 @@ ControlUnit >> executeProgram [
 
 { #category : #'file support' }
 ControlUnit >> infile [
-
-	| gui answer instructions |
+	|gui answer instructions|
 	gui := UIManager default.
-	answer := gui
-		          request: '¿Cuál es el nombre del archivo?'
-		          initialAnswer: 'program.asm'.
-	( answer = '' or: answer isNil )
-		ifFalse: [
-			instructions := self openFile: answer.
-			instructions ifNotNil: [
-				| lastInstruction |
-				1 to: instructions size do: [ :index |
-					| instruction |
-					instruction := instructions at: index.
-					self movinstructiontomem: instruction to: index ].
-				lastInstruction := Instruction new initialize: 'stop'.
-				self
-					movinstructiontomem: lastInstruction
-					to: instructions size + 1.
-				UIManager default inform: 'Archivo escrito en memoria.' ] ]
-		ifTrue: [
-		UIManager default inform: 'El nombre no puede estar vacío.' ]
+	answer := gui request: '¿Cuál es el nombre del archivo?' initialAnswer: 'program.asm' .
+	( answer = '' or: answer isNil ) ifFalse: [ 
+		self resetAFCA.
+		instructions := self openFile: answer.
+		instructions ifNotNil: [ "|lastInstruction|"
+			1 to: instructions size do: [ :index | 
+				| instruction | 
+				instruction := instructions at: index.
+				self movinstructiontomem: instruction to: index.
+			].
+		"lastInstruction := Instruction new initialize: 'stop' .
+		self movinstructiontomem: lastInstruction to: ((instructions size) + 1)."
+		UIManager default inform: 'Archivo escrito en memoria.'.
+		]					
+	] ifTrue: [UIManager default inform: 'El nombre no puede estar vacío.'.].
+
 ]
 
 { #category : #initialization }
-ControlUnit >> initialize [ 
+ControlUnit >> initialize [
 	super initialize .
 	instructionRegister := Subregister new initialize: 'ir'.
 	busDatos := DataBus new initialize: self.
@@ -797,9 +1037,10 @@ ControlUnit >> initialize [
 	dh := Subregister new initialize: 'dh'.
 	dl := Subregister new initialize: 'dl'.
 	dx := Register new initialize: 'dx' high: dh low: dl.
-
-registerDictionary := Dictionary new.
-registerDictionary
+	
+	step := false.
+	registerDictionary := Dictionary new.
+	registerDictionary
     at: 'ax' put: ax;
     at: 'al' put: al;
     at: 'ah' put: ah;
@@ -812,8 +1053,8 @@ registerDictionary
     at: 'dx' put: dx;
     at: 'dh' put: dh;
     at: 'dl' put: dl.
-
 	self creategui .
+
 ]
 
 { #category : #accessing }
@@ -830,6 +1071,21 @@ instructionRegister := register
 ControlUnit >> jmpreg: register [
 	self movregtoreg: register secondParameter: ((busDatos memory) mar) .
 	
+]
+
+{ #category : #moving }
+ControlUnit >> movbxtoreg: register1 secondParameter: register2 [
+	"En register1 viene bx, bh o bl"
+	"Simula la instruccion de mov de un registro a un registro"
+	self movregtoreg: register1 secondParameter: (busDatos memory mar).
+	"Read a la memoria"
+	(busDatos memory) read .
+	self updateRegister: 'mbr' secondParameter: (((busDatos memory) mbr) complete) .
+	self arrow: (busDatos temporary) secondParameter: ((busDatos memory) mbr) . 
+	self updateRegister: 'bus' secondParameter: (((busDatos memory) mbr) complete).
+	self arrow: register2 secondParameter: (busDatos temporary) . 
+	self updateRegister: register2 .
+
 ]
 
 { #category : #moving }
@@ -859,7 +1115,7 @@ ControlUnit >> movinstructiontomem: instruction to: direccion [
 
 ]
 
-{ #category : #operating }
+{ #category : #moving }
 ControlUnit >> movmemtoreg: direccion secondParameter: registro [
 	"Simula la instruccion de mov del contenido de una posición en memoria a un registro"
 	self movimtoreg: direccion secondParameter: ((busDatos memory) mar) . 
@@ -875,7 +1131,7 @@ ControlUnit >> movmemtoreg: direccion secondParameter: registro [
 { #category : #moving }
 ControlUnit >> movregtomem: register1 secondParameter: direccion [
 	"Simula la instruccion de mov de un registro a una posición en memoria"
-	self arrow: (busDatos temporary) secondParameter: register1 . 
+	self arrow: (busDatos temporary) secondParameter:register1 . 
 	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
 	self arrow: ((busDatos memory) mbr) secondParameter: (busDatos temporary) . 
 	self updateRegister: 'mbr' secondParameter: (((busDatos memory) mbr) complete) .
@@ -1172,6 +1428,37 @@ ControlUnit >> or: operando1 secondParameter: operando2 [
 	self arrow: operando1 secondParameter: (busDatos temporary) . 
 ]
 
+{ #category : #gui }
+ControlUnit >> outacerca [
+	| window textMorph scrollbar pasteup|
+	
+	window := SystemWindow new.
+	window setLabel: 'Acerca de'.
+	textMorph := TextMorph new.
+	textMorph contents: '
+	Este programa es un simulador de la arquitectura de 
+	cajitas azules vista en el curso de Fundamentos de 
+	Organización de Computadores. Esta es la versión 1 
+	del programa, creado el 5 de noviembre del 2023. Los
+	autores son Daniel Granados Retana, carné 2022104692
+	y Diego Granados Retana, carné 2022158363. Es para el
+	curso Lenguajes de Programación.'.
+	textMorph setProperty: #wrap toValue: true.
+	
+	scrollbar := ScrollPane new.
+	window addMorph: scrollbar.
+	window addMorph: textMorph frame: (0 @ 0 extent: 1 @ 1).
+	pasteup := PasteUpMorph new.
+	pasteup := PasteUpMorph new.
+	pasteup extent: 1000@2500.
+	pasteup addMorph: textMorph .
+	scrollbar scroller addMorph: pasteup.
+	window addMorph: scrollbar frame: (0@0 corner: 1@1).
+window openInWorld.
+
+	
+]
+
 { #category : #accessing }
 ControlUnit >> outcode [
 	| message window textMorph scrollbar pasteup|
@@ -1236,6 +1523,50 @@ window openInWorld.
 
 ]
 
+{ #category : #initialization }
+ControlUnit >> resetAFCA [
+	"Reestable toda la AFCA"
+instructionRegister := Subregister new initialize: 'ir'.
+	busDatos := DataBus new initialize: self.
+	programCounter := Subregister new initialize: 'pc'.
+	ah := Subregister new initialize: 'ah'.
+	al := Subregister new initialize: 'al'.
+	ax := Register new initialize: 'ax' high: ah low: al.
+	bh := Subregister new initialize: 'bh'.
+	bl := Subregister new initialize: 'bl'.
+	bx := Register new initialize: 'bx' high: bh low: bl.
+	ch := Subregister new initialize: 'ch'.
+	cl := Subregister new initialize: 'cl'.
+	cx := Register new initialize: 'cx' high: ch low: cl.
+	dh := Subregister new initialize: 'dh'.
+	dl := Subregister new initialize: 'dl'.
+	dx := Register new initialize: 'dx' high: dh low: dl.
+	
+	step := false.
+	registerDictionary := Dictionary new.
+	registerDictionary
+    at: 'ax' put: ax;
+    at: 'al' put: al;
+    at: 'ah' put: ah;
+    at: 'bx' put: bx;
+    at: 'bh' put: bh;
+    at: 'bl' put: bl;
+    at: 'cx' put: cx;
+    at: 'ch' put: ch;
+    at: 'cl' put: cl;
+    at: 'dx' put: dx;
+    at: 'dh' put: dh;
+    at: 'dl' put: dl.
+
+	self updateRegister: ax.
+	self updateRegister: bx.
+	self updateRegister: cx.
+	self updateRegister: dx.
+	self updateRegister: programCounter.
+	self updateRegister: instructionRegister.
+
+]
+
 { #category : #operating }
 ControlUnit >> shl: operando1 secondParameter: operando2 [
 	self arrow: (busDatos temporary) secondParameter: operando1 . 
@@ -1256,6 +1587,39 @@ ControlUnit >> shr: operando1 secondParameter: operando2 [
 	(busDatos alu) shr .
 	self arrow: (busDatos temporary) secondParameter: ((busDatos alu) b3) . 
 	self arrow: operando1 secondParameter: (busDatos temporary) . 
+]
+
+{ #category : #accessing }
+ControlUnit >> step [
+	^ step.
+
+]
+
+{ #category : #accessing }
+ControlUnit >> step: pStep [
+	step := pStep .
+
+]
+
+{ #category : #microinstructions }
+ControlUnit >> stepInstruction [
+	step := true .
+	self executeInstruction .
+	step := false.
+
+]
+
+{ #category : #microinstructions }
+ControlUnit >> stepInstruction: register [
+	UIManager default confirm: (register, ' actualizado. Presione OK para continuar.').
+
+]
+
+{ #category : #accessing }
+ControlUnit >> stepProgram [
+	step := true .
+	self executeProgram .
+
 ]
 
 { #category : #operating }
@@ -1301,9 +1665,9 @@ ControlUnit >> transformOperand: operand data: dato [
 	(operand = 'inm')
 			ifTrue: [result := dato]
 			ifFalse: [
-				((operand first) = '[')
-					ifTrue: [((operand second) = 'b')
-						ifTrue: [result := (operand allButFirst allButLast)]
+				((operand first) = $[)
+					ifTrue: [((operand second) = $b)
+						ifTrue: [result := (operand allButFirst allButLast) ]
 						ifFalse: [result := dato]
 						]
 					ifFalse: [result := operand].
@@ -1336,54 +1700,71 @@ ControlUnit >> updateRegister: register [
 	"Actualiza la interfaz grafica"
 	regUpdate = 'ax' ifTrue: [
 		axvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'ax'].
 		^ value ].
 	regUpdate = 'bx' ifTrue: [
 		bxvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'bx'].
 		^ value ].
 	regUpdate = 'cx' ifTrue: [
 		cxvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'cx'].
 		^ value ].
 	regUpdate = 'dx' ifTrue: [
 		dxvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'dx'].
 		^ value ].
 	regUpdate = 'b1' ifTrue: [
 		b1value contents: value asString.
+		step ifTrue: [self stepInstruction: 'b1'].
 		^ value ].
 	regUpdate = 'b2' ifTrue: [
 		b2value contents: value asString.
+		step ifTrue: [self stepInstruction: 'b2'].
 		^ value ].
 	regUpdate = 'b3' ifTrue: [
 		b3value contents: value asString.
+		step ifTrue: [self stepInstruction: 'b3'].
 		^ value ].
 	regUpdate = 'b4' ifTrue: [
 		b4value contents: value asString.
+		step ifTrue: [self stepInstruction: 'b4'].
 		^ value ].
 	regUpdate = 'ir' ifTrue: [
 		irvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'ir'].
 		^ value ].
 	regUpdate = 'pc' ifTrue: [
 		pcvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'pc'].
 		^ value ].
 	regUpdate = 'mar' ifTrue: [
 		marvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'mar'].
 		^ value ].
 	regUpdate = 'mbr' ifTrue: [
 		mbrvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'mbr'].
 		^ value ].
 	regUpdate = 'carry' ifTrue: [
 		carryvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'carry flag'].
 		^ value ].
 	regUpdate = 'sign' ifTrue: [
 		signvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'sign flag'].
 		^ value ].
 	regUpdate = 'zero' ifTrue: [
 		zerovalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'zero flag'].
 		^ value ].
 	regUpdate = 'interrupt' ifTrue: [
 		interruptvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'interrupt flag'].
 		^ value ].
 	regUpdate = 'bus' ifFalse: [ ^ self ].
 	busvalue contents: value asString.
+	step ifTrue: [self stepInstruction: 'bus'].
 	^ value
 
 ]
@@ -1393,54 +1774,71 @@ ControlUnit >> updateRegister: register secondParameter: value [
 	"Actualiza la interfaz grafica"
 	register = 'ax' ifTrue: [
 		axvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'ax'].
 		^ value ].
 	register = 'bx' ifTrue: [
 		bxvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'bx'].
 		^ value ].
 	register = 'cx' ifTrue: [
 		cxvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'cx'].
 		^ value ].
 	register = 'dx' ifTrue: [
 		dxvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'dx'].
 		^ value ].
 	register = 'b1' ifTrue: [
 		b1value contents: value asString.
+		step ifTrue: [self stepInstruction: 'b1'].
 		^ value ].
 	register = 'b2' ifTrue: [
 		b2value contents: value asString.
+		step ifTrue: [self stepInstruction: 'b2'].
 		^ value ].
 	register = 'b3' ifTrue: [
 		b3value contents: value asString.
+		step ifTrue: [self stepInstruction: 'b3'].
 		^ value ].
 	register = 'b4' ifTrue: [
 		b4value contents: value asString.
+		step ifTrue: [self stepInstruction: 'b4'].
 		^ value ].
 	register = 'ir' ifTrue: [
 		irvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'ir'].
 		^ value ].
 	register = 'pc' ifTrue: [
 		pcvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'pc'].
 		^ value ].
 	register = 'mar' ifTrue: [
 		marvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'mar'].
 		^ value ].
 	register = 'mbr' ifTrue: [
 		mbrvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'mbr'].
 		^ value ].
 	register = 'carry' ifTrue: [
 		carryvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'carry flag'].
 		^ value ].
 	register = 'sign' ifTrue: [
 		signvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'sign flag'].
 		^ value ].
 	register = 'zero' ifTrue: [
 		zerovalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'zero flag'].
 		^ value ].
 	register = 'interrupt' ifTrue: [
 		interruptvalue contents: value asString.
+		step ifTrue: [self stepInstruction: 'interrupt flag'].
 		^ value ].
 	register = 'bus' ifFalse: [ ^ self ].
 	busvalue contents: value asString.
+	step ifTrue: [self stepInstruction: 'bus'].
 	^ value
 
 ]
