@@ -375,6 +375,20 @@ ControlUnit >> cl [
 
 ]
 
+{ #category : #flags }
+ControlUnit >> clc [
+	(busDatos flags) clc.
+	self updateRegister: 'carry' secondParameter: (busDatos flags carry). 
+
+]
+
+{ #category : #flags }
+ControlUnit >> cli [
+	(busDatos flags) cli.
+	self updateRegister: 'interrupt' secondParameter: (busDatos flags interrupt). 
+
+]
+
 { #category : #'initialize-release' }
 ControlUnit >> close [
 World submorphs select: [ :m | 
@@ -395,6 +409,20 @@ thenDo: [ :m | m delete ].
 { #category : #gui }
 ControlUnit >> closedisplaycode [
 	dataWindow delete.
+
+]
+
+{ #category : #flags }
+ControlUnit >> cls [
+	(busDatos flags) cls.
+	self updateRegister: 'sign' secondParameter: (busDatos flags sign). 
+
+]
+
+{ #category : #flags }
+ControlUnit >> clz [
+	(busDatos flags) clz.
+	self updateRegister: 'zero' secondParameter: (busDatos flags zero). 
 
 ]
 
@@ -715,7 +743,7 @@ ControlUnit >> creategui [
 	inregButton position: (stepInstructionButton position + (0@30)).
 	
 	stiButton := SimpleButtonMorph new.
-	stiButton label: 'Cargar AFCA'.
+	stiButton label: 'Activar interrupción'.
 	stiButton on: #click send: #sti to: self.
 	stiButton color: (Color r: 1.0 g: 0.5 b: 0).
 	stiButton openInWorld.
@@ -926,8 +954,8 @@ ControlUnit >> executeInstruction [
 			ifNotNil: [
 				(instruction fuente)
 					"Tiene 1 solo operando"
-					ifNil: [methodStr := instructionStr,operand1Str,':'.
-							self perform: methodStr asSymbol with: operand1
+					ifNil: [methodStr := instructionStr,operand2Str,':'.
+							self perform: methodStr asSymbol with: operand2
 							]
 					ifNotNil:[
 						"Tiene 2 operandos"
@@ -940,6 +968,7 @@ ControlUnit >> executeInstruction [
 							]
 							ifFalse: [self perform: methodStr asSymbol with: operand1 with: operand2.].
 						].
+			].
 			"Ejecuta la instruccion decodificada"
 			"compiler evaluate: methodStr for: self."
 			
@@ -950,7 +979,6 @@ ControlUnit >> executeInstruction [
 				]. 
 			"Incrementa el PC"
 			self opimtoreg: 1 secondParameter: programCounter operation: 'add'.
-			].
 		].
 
 ]
@@ -1003,8 +1031,8 @@ ControlUnit >> executeProgram [
 			ifNotNil: [
 				(instruction fuente)
 					"Tiene 1 solo operando"
-					ifNil: [methodStr := instructionStr,operand1Str,':'.
-							self perform: methodStr asSymbol with: operand1
+					ifNil: [methodStr := instructionStr,operand2Str,':'.
+							self perform: methodStr asSymbol with: operand2
 							]
 					ifNotNil:[
 						"Tiene 2 operandos"
@@ -1017,6 +1045,7 @@ ControlUnit >> executeProgram [
 							]
 							ifFalse: [self perform: methodStr asSymbol with: operand1 with: operand2.].
 						].
+			].
 			"Ejecuta la instruccion decodificada"
 			"compiler evaluate: methodStr for: self."
 			
@@ -1027,7 +1056,6 @@ ControlUnit >> executeProgram [
 				]. 
 			"Incrementa el PC"
 			self opimtoreg: 1 secondParameter: programCounter operation: 'add'.
-			].
 		].
 	].
 
@@ -1904,6 +1932,13 @@ ControlUnit >> shr: operando1 secondParameter: operando2 [
 	self arrow: operando1 secondParameter: (busDatos temporary) . 
 ]
 
+{ #category : #flags }
+ControlUnit >> stc [
+	(busDatos flags) stc.
+	self updateRegister: 'carry' secondParameter: (busDatos flags carry). 
+
+]
+
 { #category : #accessing }
 ControlUnit >> step [
 	^ step.
@@ -1934,6 +1969,27 @@ ControlUnit >> stepInstruction: register [
 ControlUnit >> stepProgram [
 	step := true .
 	self executeProgram .
+
+]
+
+{ #category : #flags }
+ControlUnit >> sti [
+	(busDatos flags) sti.
+	self updateRegister: 'interrupt' secondParameter: (busDatos flags interrupt). 
+
+]
+
+{ #category : #flags }
+ControlUnit >> sts [
+	(busDatos flags) sts.
+	self updateRegister: 'sign' secondParameter: (busDatos flags sign). 
+
+]
+
+{ #category : #flags }
+ControlUnit >> stz [
+	(busDatos flags) stz.
+	self updateRegister: 'zero' secondParameter: (busDatos flags zero). 
 
 ]
 
