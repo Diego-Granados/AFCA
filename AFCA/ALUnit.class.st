@@ -186,7 +186,7 @@ ALUnit >> shl [
 	|value|
 	(busdatos flags) clc .
 	(busdatos flags) clz .
-	value := 	((b1 complete) bitShift: (-1 * (b2 complete))).
+	value := 	((b1 complete) bitShift: ((b2 complete))).
 	(value > 65535) ifTrue: [ (busdatos flags) stc .] .
 	(value = 0) ifTrue: [ (busdatos flags) stz . ] .
 	b3 complete: value
@@ -197,10 +197,10 @@ ALUnit >> shr [
 	|value digit|
 	(busdatos flags) clc .
 	(busdatos flags) clz .
-	value := 	((b1 complete) bitShift: ((b2 complete) - 1)).
+	value := 	((b1 complete) bitShift: (-1 * (b2 complete - 1))).
 	digit := value \\ 2 . 
 	(digit = 1) ifTrue: [ (busdatos flags) stc .] .
-	value := value bitShift: 1 .
+	value := value bitShift: -1 .
 	(value = 0) ifTrue: [ (busdatos flags) stz . ] .
 	b3 complete: value
 ]

@@ -81,6 +81,7 @@ Instruction class >> initialize [
 		at: 'clc' put: 20;
 		at: 'clz' put: 21;
 		at: 'cls' put: 22;
+		at: 'xor' put: 23;
 		at: 'stop' put: 255.
 
 ]

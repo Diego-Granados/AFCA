@@ -239,7 +239,7 @@ ControlUnit class >> initialize [
 		at: 11 put: 'op'; "div"
 		at: 12 put: 'op'; "and"
 		at: 13 put: 'op'; "or"
-		at: 14 put: 'op'; "xor"
+		at: 14 put: 'not'; "xor"
 		at: 15 put: 'op'; "shl"
 		at: 16 put: 'op'; "shr"
 		at: 17 put: 'stc';
@@ -248,6 +248,7 @@ ControlUnit class >> initialize [
 		at: 20 put: 'clc';
 		at: 21 put: 'clz';
 		at: 22 put: 'cls';
+		at: 23 put: 'op';
 		at: 255 put: 'stop'.
 
 		
@@ -260,9 +261,9 @@ ControlUnit class >> initialize [
 		at: 11 put: 'div';
 		at: 12 put: 'and';
 		at: 13 put: 'or';
-		at: 14 put: 'not';
 		at: 15 put: 'shl';
-		at: 16 put: 'shr'.
+		at: 16 put: 'shr';
+		at: 23 put: 'xor'.
 ]
 
 { #category : #microinstructions }
@@ -768,6 +769,12 @@ ControlUnit >> creategui [
 	acercaButton on: #click send: #outacerca to: self.
 	acercaButton openInWorld.
 	acercaButton position: (closeButton position + (0@50)).
+	
+	ayudaButton := SimpleButtonMorph new.
+	ayudaButton label: 'Ayuda' .
+	ayudaButton on: #click send: #outayuda to: self.
+	ayudaButton openInWorld.
+	ayudaButton position: (acercaButton position + (0@50)).
 
 	saveButton := SimpleButtonMorph new.
 	saveButton label: 'Guardar AFCA'.
@@ -1033,9 +1040,9 @@ ControlUnit >> executeInstruction [
 			"compiler evaluate: methodStr for: self."
 			
 			"Subciclo de interrupcion"
-			(busDatos flags interrupt isZero) ifFalse: [
+			(self TEST: 3) ifTrue: [
 				UIManager default inform: 'Se está atendiendo una interrupción'.
-				busDatos flags cli.
+				self cli.
 				]. 
 			"Incrementa el PC"
 			self opimtoreg: 1 secondParameter: programCounter operation: 'add'.
@@ -1110,9 +1117,9 @@ ControlUnit >> executeProgram [
 			"compiler evaluate: methodStr for: self."
 			
 			"Subciclo de interrupcion"
-			(busDatos flags interrupt isZero) ifFalse: [
+			(self TEST: 3) ifTrue: [
 				UIManager default inform: 'Se está atendiendo una interrupción'.
-				busDatos flags cli.
+				self cli.
 				]. 
 			"Incrementa el PC"
 			self opimtoreg: 1 secondParameter: programCounter operation: 'add'.
@@ -1417,7 +1424,7 @@ ControlUnit >> mulregtoreg: operando1 secondParameter: operando2 [
 ]
 
 { #category : #operating }
-ControlUnit >> not: operando1 [
+ControlUnit >> notreg: operando1 [
 	"Instruccion de ensamblador que hace el not"
 	self arrow: (busDatos temporary) secondParameter: operando1 .
 	self updateRegister: 'bus' secondParameter: ((busDatos temporary) complete) .
@@ -1614,64 +1621,6 @@ ControlUnit >> opmemtoreg: direccion secondParameter: operando1 operation: op [
 ]
 
 { #category : #operating }
-ControlUnit >> opregtomem: direccion secondParameter: operando1 operation: op [
-	"Este método realiza operaciones de la unidad de ALU y actualiza registros según la operación especificada."
-	"Lo hace con un el valor en memoria a un registro"
-	self movmemtoreg: direccion secondParameter: ((busDatos alu) b1) . "Mueve datos desde la dirección a registro b1."
-	self arrow: (busDatos temporary) secondParameter: operando1 . "Actualiza el registro temporary con operando1."
-	self updateRegister: 'bus' secondParameter: (operando1 complete) . "Actualiza el registro 'bus' con operando1 complete."
-	self arrow: ((busDatos alu) b2) secondParameter: (busDatos temporary) . "Actualiza registro b2 con el valor de temporary."
-	self updateRegister: 'b2' secondParameter: (((busDatos alu) b2) complete) . "Actualiza b2 con su valor completo."
-
-	(op = 'add') ifTrue: [ 
-		(busDatos alu) add . "Realiza una suma si la operación es 'add'."
-	].
-
-	((op = 'sub') or: (op = 'cmp')) ifTrue: [ 
-		(busDatos alu) sub . "Realiza una resta si la operación es 'sub' o 'cmp'."
-	].
-
-	(op = 'mul') ifTrue: [ 
-		(busDatos alu) mul . "Realiza una multiplicación si la operación es 'mul'."
-	].
-
-	(op = 'div') ifTrue: [ 
-		(busDatos alu) div . "Realiza una división si la operación es 'div'."
-		self updateRegister: 'b4' secondParameter: (((busDatos alu) b4) complete) . "Actualiza el registro b4 con su valor completo."
-	].
-
-	(op = 'and') ifTrue: [ 
-		(busDatos alu) and . "Realiza una operación AND si la operación es 'and'."
-	].
-
-	(op = 'or') ifTrue: [ 
-		(busDatos alu) or . "Realiza una operación OR si la operación es 'or'."
-	].
-
-	(op = 'xor') ifTrue: [ 
-		(busDatos alu) xor . "Realiza una operación XOR si la operación es 'xor'."
-	].
-
-	(op = 'shl') ifTrue: [ 
-		(busDatos alu) shl . "Realiza un desplazamiento a la izquierda si la operación es 'shl'."
-	].
-
-	(op = 'shr') ifTrue: [ 
-		(busDatos alu) shr . "Realiza un desplazamiento a la izquierda si la operación es 'shr'."
-	].
-
-	self updateRegister: 'b3' secondParameter: (((busDatos alu) b3) complete) . "Actualiza el registro b3 con su valor completo."
-	self updateRegister: 'carry' secondParameter: ((busDatos flags) carry) . "Actualiza el registro 'carry' con el valor de la bandera 'carry'."
-	self updateRegister: 'sign' secondParameter: ((busDatos flags) sign) . "Actualiza el registro 'sign' con el valor de la bandera 'sign'."
-	self updateRegister: 'zero' secondParameter: ((busDatos flags) zero) . "Actualiza el registro 'zero' con el valor de la bandera 'zero'."
-
-	(op = 'cmp') ifFalse: [ 
-		self movregtomem: ((busDatos alu) b3) secondParameter: direccion . "Si la operación no es 'cmp', mueve el valor de b3 a la dirección especificada."
-	].
-
-]
-
-{ #category : #operating }
 ControlUnit >> opregtoreg: operando2 secondParameter: operando1 operation: op [
 	"Este método realiza operaciones de la unidad de ALU y actualiza registros según la operación especificada."
 	"Lo hace con un el valor en un registro a un registro"
@@ -1781,6 +1730,185 @@ window openInWorld.
 window position: 800@200.
 
 	
+]
+
+{ #category : #gui }
+ControlUnit >> outayuda [
+	| window textMorph scrollbar pasteup|
+	
+	window := SystemWindow new.
+	window setLabel: 'Ayuda'.
+	textMorph := TextMorph new.
+	textMorph contents: '
+Instalación
+Pharo
+Para instalar Pharo, hay que entrar a la página https://pharo.org/download y 
+descargar la versión para el sistema operativo de la computadora. Luego de abrir 
+el Pharo Launcher, hay que crear una nueva imagen o importarla. Para este proyecto,
+ se utilizó la versión estable Pharo 11.0 64 bit.
+
+Para instalar la imagen, es necesario descargar los archivos de la imagen. 
+Luego, en el Pharo Launcher, hay que presionar el botón de “Import”:
+
+Se muestran dos opciones:
+
+En este caso hay que escoger la de Import the image directory (and all files it contains) 
+into the Pharo Launcher images. Luego, hay que buscar el directorio donde está la imagen y seleccionarla.
+
+Se escoge un nombre para la imagen si es necesario y con eso aparece en el Launcher y podemos seleccionarla para abrirla.
+
+
+Squeak
+Para instalar Squeak, hay que entrar a la página https://squeak.org/downloads/ y descargar la versión correspondiente 
+para el sistema operativo de la computadora. Esto descarga un empacado con los archivos de Squeak. 
+Adentro está el Squeak.exe, que es el programa.
+
+Para instalar el proyecto, hay dos opciones. Primero, es necesario definir dónde se quiere almacenar la imagen. 
+Esto puede ser dentro del proyecto de la instalación de Squeak o se puede crear un nuevo folder y guardarlo ahí. 
+La imagen está compuesta por dos archivos, un archivo .image y otro .changes, ambos son necesarios y deben ubicarse 
+en el mismo folder. La primera opción de instalación es abriendo Squeak.exe y seleccionando la imagen del proyecto 
+de Squeak. Luego ya se puede seguir con la ejecución.
+
+La otra opción es con el archivo terminado .st. Este es el empaquetado del proyecto, lo más similar a un ejecutable
+que hay. Squeak no está diseñado en su naturaleza de poder generar ejecutables (Fuente: https://wiki.squeak.org/squeak/780). 
+Ahora se puede abrir otra imagen de Squeak, limpia o nueva y arrastrar el archivo a la pestaña de Squeak y 
+luego seleccionar “file in entire file”.
+Ejecución
+Cuando ya se tiene la imagen de la AFCA, si no está creada, hay que abrir el Playground en Pharo o 
+el Workspace en Squeak. Para abrir el Playground en Pharo, se presiona en cualquier parte de la pantalla 
+y se entra a la sección de Browse y luego al Playground. Para abrir el Workspace en Squeak, hacemos click 
+izquierdo con el mouse en cualquier lugar de la pantalla y se selecciona Workspace.
+
+Ahí, simplemente podemos copiar y pegar el siguiente código:
+| cu |
+Instruction initialize.
+ControlUnit initialize.
+cu := ControlUnit new.
+Si se desea crear una AFCA completamente nueva, hay que hacer:
+| cu |
+Instruction initialize.
+ControlUnit initialize.
+World submorphs select: [ :m | 
+    m class = Morph and: [ 
+    m isLocked not ] ] 
+thenDo: [ :m | m delete ].
+World submorphs select: [ :m | 
+    m class = SimpleButtonMorph and: [ 
+    m isLocked not ] ] 
+thenDo: [ :m | m delete ].
+World submorphs select: [ :m | 
+    m class = TextMorph and: [ 
+    m isLocked not ] ] 
+thenDo: [ :m | m delete ].
+cu := ControlUnit new.
+Luego, lo seleccionamos todo y presionamos click derecho → “Do it”, o Ctrl + d en Squeak.
+
+Esto nos lleva a tener lo siguiente:
+En Pharo:
+
+En Squeak:
+
+Primero, antes de empezar, hay que ir al directorio donde está almacenada el AFCA y crear el fólder 
+de datos. En este se van a almacenar los programas y los respaldos de las imágenes.
+  
+
+
+Los archivos donde se almacena el código pueden tener cualquier nombre, nada más es recomendado
+ que sigan el formato que se usa para almacenar los programas en ensamblador.
+Un ejemplo puede ser el siguiente:
+
+Para este simulador, es importante escribir las instrucciones con los espacios y comas adecuadas. 
+Por ejemplo, hay que separar la instrucción del primer operando con un solo espacio, poner una coma 
+inmediatamente después del primer operando, y poner otro espacio para separar el segundo operando. 
+Además, todo debe ir en minúscula. De esta forma, uno se asegura que las instrucciones deberían funcionar.
+
+Luego de tener el programa almacenado correctamente, se puede presionar el botón para agregar el programa. 
+Se abre una pantalla donde uno puede ingresar el nombre del archivo. Es importante incluir la extensión.
+
+Si el archivo se cargó correctamente, aparece un mensaje en la pantalla.
+
+Luego, si se presiona el botón de “Ver código” en la memoria, se despliega el contenido del segmento de código 
+con el programa codificado:
+
+Para ejecutar el programa, existen varias opciones: 
+
+El botón de “Ejecutar Programa” lo corre completo, sin parar.
+
+El botón de “Programa paso a paso” ejecuta el programa microinstrucción por microinstrucción hasta el puro final, 
+no se puede parar hasta terminar y no se pueden modificar los valores entre microinstrucciones, solo verlos en 
+el GUI. Cuando se hace un acceso a memoria, aparece una ventana con el pedazo de memoria modificado. En cada 
+microinstrucción aparece un mensaje para pedir que se continúe con el programa. Uno ejemplo de estos mensajes 
+es el siguiente:
+
+
+El botón de “Ejecutar instrucción” ejecuta una sola instrucción de ensamblador. Corre el microprograma completo.
+
+El botón de “Instrucción paso a paso” ejecuta una sola instrucción, pero microinstrucción por microinstrucción, 
+al igual que “Programa paso a paso”. Se muestran mensajes con los cambios realizados por las microinstrucciones.
+
+Existen otros botones que permiten modificar y mostrar información:
+ 
+El botón de “Modificar registro” cambia el valor almacenado en un registro. Se muestra un menú con los 
+registros disponibles y luego se pide el valor nuevo.
+
+
+El botón de “Desplegar contenido de un registro” pide el mismo menú y luego muestra el contenido de ese 
+registro. Utiliza el MBR para desplegar el valor.
+
+El botón de “Ver datos” en la memoria despliega todo lo que está en el segmento de datos de la memoria.
+
+El de “Ver código” en la memoria despliega el código almacenado. 
+
+El botón de “Activar interrupción” enciende la bandera de interrupción. Luego en el ciclo de fetch se manejará la interrupción y se mostrará un mensaje.
+
+
+Hay botones que son más de aspectos administrativos de la AFCA:
+
+El botón de “Restablecer AFCA” reinicia los valores de todos los registros.
+
+El botón de “Cerrar AFCA” cierra la AFCA y si se quiere volver a correrla, hay que correr las 
+instrucciones en el Playground o Workspace que se explicaron al inicio de esta sección.
+
+El botón de “Acerca de” despliega una ventana con la información del programa.
+
+
+El botón de “Ayuda” muestra una ventaja con el presente manual.
+
+El botón de “Guardar AFCA” es que se utiliza para respaldar la AFCA y la salva a disco. Muestra una 
+ventana que pide el nombre del archivo.
+
+Un archivo queda de la siguiente manera:
+
+En primera fila vienen los contenidos de registros y banderas en el siguiente orden:
+ax bx cx dx programCounter b1 b2 b3 b4 busDatos carry sign zero interrupt mar mbr
+En la segunda fila viene el contenido del instruction register.
+Luego, en las siguientes 128 líneas vienen los datos y en las 128 líneas restantes está el código. 
+Las instrucciones tienen el formato de instruccionCode destinoCode fuenteCode cuartoDato.
+
+El botón de “Cargar AFCA” establece los valores de la AFCA con base en la información en el archivo 
+que se le envía. Luego, se muestra un mensaje de éxito:
+
+Si el archivo de restauración no existe, el programa muestra el siguiente mensaje de error:
+
+No obstante, esto no afecta en el funcionamiento de la AFCA.
+
+Estas son todas las funcionalidades implementadas en la AFCA. Con este manual de usuario ya se puede 
+usar en su máximo esplendor.'.
+	textMorph setProperty: #wrap toValue: true.
+	
+	scrollbar := ScrollPane new.
+	window addMorph: scrollbar.
+	window addMorph: textMorph frame: (0 @ 0 extent: 1 @ 1).
+	pasteup := PasteUpMorph new.
+	pasteup := PasteUpMorph new.
+	pasteup extent: 8000@3000.
+	pasteup addMorph: textMorph .
+	scrollbar scroller addMorph: pasteup.
+	window addMorph: scrollbar frame: (0@0 corner: 1@1).
+window openInWorld.
+window position: 800@200.
+
+
 ]
 
 { #category : #gui }
@@ -1957,7 +2085,7 @@ ControlUnit >> restoreAFCA [
 	|gui answer archivo line flags memory alu data code|
 	gui := UIManager default.
 	answer := gui request: '¿Cuál es el nombre del archivo?' initialAnswer: 'afca.txt' .
-	(answer = '') ifFalse: [
+	(answer = '' or: answer isNil) ifFalse: [
 		| lineArray stream fileArray|
 		"Reestablecemos le AFCA"
 		self resetAFCA.
@@ -2036,7 +2164,7 @@ ControlUnit >> saveAFCA [
 	(instructionRegister instruction) ifNil: [UIManager default inform: 'Ejecute una instrucción antes de guardar el estado del AFCA'.]
 	ifNotNil: [
 	answer := gui request: '¿Cuál es el nombre del archivo del AFCA?' initialAnswer: 'afca.txt' .
-	(answer = '') ifFalse: [
+	(answer = '' or: answer isNil) ifFalse: [
 		answer := 'datos\',answer.
 		archivo := answer asFileReference writeStream.
 		"Escribimos los registros en el archivo. Están separados por espacios en blanco
